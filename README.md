@@ -2,12 +2,14 @@
 # Object
 TODO
 
+
+# Usage
+
 ## Input
 TODO
 
 ## Output
 TODO
-
 
 ## Train
 TODO
@@ -19,7 +21,7 @@ TODO
 
 [Yolo Homepage](https://pjreddie.com/darknet/yolo/)
 [Yolo 3 Document](https://pjreddie.com/media/files/papers/YOLOv3.pdf)
-[Mainly referenced project](https://github.com/westerndigitalcorporation/YOLOv3-in-PyTorch/blob/release/src/model.py)
+[Referenced project](https://github.com/westerndigitalcorporation/YOLOv3-in-PyTorch)
 
 
 # Model
