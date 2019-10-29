@@ -1,0 +1,52 @@
+{
+    "model" : {
+        "image_size" : [608, 608, 3],
+        "anchors" : [[10, 13], [16, 30], [33, 23], [30, 61], [62, 45], [59, 119], [116, 90], [156, 198], [373, 326]],
+        "class_count" : 0,
+
+        "debug_level" : 0
+    },
+
+    "loss" : {
+        "image_size" : [608, 608, 3],
+        "coef_noobj" : 0.2,
+        "coef_coord" : 20,
+        "iou_threshold" : 0.8,
+
+        "debug_level" : 0
+    },
+
+    "train" : {
+        "train_list" : "../data/detect/train.txt",
+        "train_image" : "../data/detect/images/",
+        "train_label" : "../data/detect/labels/",
+
+        "batch_size" : 2,
+
+        "init_lr" : 0.1,
+        "lr_window" : 10,
+        "lr_threshold" : 1,
+        "lr_decay" : 0.95,
+
+        "epochs" : 10,
+        "checkpoint" : 200,
+        "checkpoint_dir" : "./model/",
+
+        "debug_level" : 0,
+        "use_tensorboard" : false,
+        "use_anomaly_detection" : false
+    },
+
+    "test" : {
+        "image_size" : [608, 608, 3],
+        
+        "test_list" : "../data/detect/test.txt",
+        "test_image" : "../data/detect/images/",
+        "test_label" : "../data/detect/labels/",
+
+        "debug_level" : 0
+    }
+}
+
+
+

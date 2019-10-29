@@ -9,7 +9,7 @@ class Darknet53(nn.Module):
     def __init__(self, config):
         super(Darknet53, self).__init__()
         self.baseline = nn.Sequential(
-            ConvLayer(config['channel'], 32, 3, 1),
+            ConvLayer(config['image_size'][2], 32, 3, 1),
             ConvLayer(32, 64, 3, 2),
 
             ResidualLayer(64),
@@ -70,7 +70,9 @@ class YoloNet(nn.Module):
     def __init__(self, config):
         super(YoloNet, self).__init__()
         
-        anch_cnt = len(config['anchors'])
+        anchor_cnt = len(config['anchors'])
+        anchor_per_unit = anchor_cnt // 3
+        attrib_count = config['attrib_count']
         
         self.conv3 = nn.Sequential(
             ConvLayer(1024, 512, 1, 1, 0),
@@ -82,8 +84,8 @@ class YoloNet(nn.Module):
 
         self.detect3 = nn.Sequential(
             ConvLayer(512, 1024, 3, 1, 1),
-            ConvLayer(1024, config['attribs'] * anch_cnt // 3, 1, 1, 0),
-            YoloLayer(config, config['anchors'][anch_cnt // 3 * 2 : anch_cnt], 32)
+            ConvLayer(1024, attrib_count * anchor_per_unit, 1, 1, 0),
+            YoloLayer(config, config['anchors'][anchor_per_unit * 2 : anchor_cnt], 32)
         )
 
         self.conv2_1 = nn.Sequential(
@@ -101,8 +103,8 @@ class YoloNet(nn.Module):
 
         self.detect2 = nn.Sequential(
             ConvLayer(256, 512, 3, 1, 1),
-            ConvLayer(512, config['attribs'] * anch_cnt // 3, 1, 1, 0),
-            YoloLayer(config, config['anchors'][anch_cnt // 3 * 1 : anch_cnt // 3 * 2], 16)
+            ConvLayer(512, attrib_count * anchor_per_unit, 1, 1, 0),
+            YoloLayer(config, config['anchors'][anchor_per_unit : anchor_per_unit * 2], 16)
         )
 
         self.conv1_1 = nn.Sequential(
@@ -120,8 +122,8 @@ class YoloNet(nn.Module):
 
         self.detect1 = nn.Sequential(
             ConvLayer(128, 256, 3, 1, 1),
-            ConvLayer(256, config['attribs'] * anch_cnt // 3, 1, 1, 0),
-            YoloLayer(config, config['anchors'][0 : anch_cnt // 3 * 1], 8)
+            ConvLayer(256, attrib_count * anchor_per_unit, 1, 1, 0),
+            YoloLayer(config, config['anchors'][0 : anchor_per_unit], 8)
         )
 
     def forward(self, in1, in2, in3):
@@ -149,8 +151,10 @@ class YoloV3(nn.Module):
     def __init__(self, config):
         super(YoloV3, self).__init__()
         
-        assert config['size'][0] % 32 is 0
-        assert config['size'][1] % 32 is 0 
+        assert config['image_size'][0] % 32 is 0, ('image_size[0] should be multiple of 32')
+        assert config['image_size'][1] % 32 is 0, ('image_size[1] should be multiple of 32')
+        assert len(config['anchors']) % 3 is 0, ('len(anchors) should be multiple of 3')
+        assert config['class_count'] >= 0, ('class_count should be equal or above 0')
         
         self.darknet = Darknet53(config)
         self.yolonet = YoloNet(config)
@@ -167,10 +171,11 @@ class YoloLoss(object):
         self.device = config['device']
         
         self.coef_noobj = torch.tensor(config['coef_noobj']).to(self.device)
-        self.coef_coord = torch.tensor(config['coef_coord']).to(self.device)
-        self.coef_total = torch.tensor(config['coef_total']).to(self.device)
-        self.debug_level = config['debug_level']
+        self.coef_coord = torch.tensor(config['coef_coord'] / 
+                                       (config['image_size'][0] * config['image_size'][1])).to(self.device) 
         self.iou_threshold = config['iou_threshold']
+        
+        self.debug_level = config['debug_level']
         
         self.iou_epsilon = torch.tensor(1e-9).to(self.device)
         
@@ -179,9 +184,9 @@ class YoloLoss(object):
             print('pred shape: ', pred.shape)
             print('label shape: ', label.shape)
             print('label_len: ', label_len)
+            
         # pred = B * P * Attrib
         # label = B * 15 * Attrib
-        
         pred = F.relu(pred)
         label = F.relu(label)
         
@@ -237,12 +242,16 @@ class YoloLoss(object):
                 print('mean_coord_loss', mean_coord_loss)
             total_loss += mean_coord_loss
             
-            # conf loss
+            # confidence loss
             conf_loss = self.calc_confidence_loss(pred[batch_idx], iou, responsibile)
             mean_conf_loss = torch.mean(conf_loss)
             if self.debug_level >= 2:
                 print('mean_coord_loss', mean_coord_loss)
             total_loss += mean_conf_loss
+            
+            # classification loss
+            # TODO
+            # not implemented (we firstly aims to classify bbox of face only)
             
             
             if self.debug_level >= 2:
@@ -257,9 +266,9 @@ class YoloLoss(object):
         if self.debug_level >= 1:
             print('loss : ', total_loss / num_batch * self.coef_total)
         
-        return total_loss / num_batch * self.coef_total
+        return total_loss / num_batch
     
-    ### from https://github.com/westerndigitalcorporation/YOLOv3-in-PyTorch/blob/release/src/model.py
+    # why does this works?
     def batch_iou(self, pred, label):
         x1 = label[..., 0]
         y1 = label[..., 1]

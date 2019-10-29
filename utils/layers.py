@@ -40,17 +40,16 @@ class UpscaleLayer(nn.Module):
         return F.interpolate(input, scale_factor = self.scale, mode = self.mode)
 
 
-### from https://github.com/westerndigitalcorporation/YOLOv3-in-PyTorch/blob/release/src/model.py
 class YoloLayer(nn.Module):
     def __init__(self, config, anchors, stride):
         super(YoloLayer, self).__init__()
         
-        self.num_grid = config['size'][0] // stride
+        self.num_grid = config['image_size'][0] // stride
         
         self.stride = stride
         self.anchors = torch.tensor(anchors).to(config['device'], dtype = config['dtype'])
-        self.attrib_cnt = config['attribs']
         self.anchor_cnt = len(anchors)
+        self.attrib_cnt = config['attrib_count']
         
         grid_tensor = torch.arange(self.num_grid).repeat(self.num_grid, 1) + 0.5
         grid_tensor = grid_tensor.to(config['device'], dtype = config['dtype'])
