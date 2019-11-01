@@ -92,13 +92,16 @@ class SavingProcess(object):
         return meta
 
 class CropPickingProcess(object):
+    def __init__(self, postfix):
+        self.postfix = postfix
+    
     def __call__(self, params, meta):
         if meta is None:
             return None
 
         output = {}
 
-        output['title'] = meta['title'] + '_crop'
+        output['title'] = meta['title'] + self.postfix
         output['background_path'] = meta['background_path']
         output['faces'] = [meta['faces'][person]['emote']['bbox'] for person in meta['faces']]
 
@@ -118,20 +121,27 @@ class CropResizingProcess(object):
             orig_faces = meta['faces']
             orig_w, orig_h = orig_img.size
             
-            for _ in range(0, 7) :
-                min_w = min(self.size[0], orig_w)
-                max_w = max(self.size[0], orig_w)
-                min_h = min(self.size[1], orig_h)
-                max_h = max(self.size[1], orig_h)
+            for _ in range(0, 10) :
+                if self.size[0] > orig_w :
+                    min_w = orig_w
+                else :
+                    min_w = self.size[0] // 2
+                max_w = orig_w
+                
+                if self.size[1] > orig_h :
+                    min_h = orig_h
+                else :
+                    min_h = self.size[1] // 2
+                max_h = orig_h
 
-                new_w = random.randrange(min_w // 2, max_w, 1)
-                new_h = random.randrange(min_h // 2, max_h, 1)
+                new_w = random.randrange(min_w, max_w, 1)
+                new_h = random.randrange(min_h, max_h, 1)
                 new_x1 = random.randrange(0, max_w - new_w, 1)
                 new_x2 = new_x1 + new_w
                 new_y1 = random.randrange(0, max_h - new_h, 1)
                 new_y2 = new_y1 + new_h
             
-                if abs((orig_w / orig_h) - (new_w / new_h)) < 0.3:
+                if abs((orig_w / orig_h) - (new_w / new_h)) < 0.5:
                     continue
             
                 collide = False
