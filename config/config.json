@@ -1,7 +1,10 @@
 {
     "model" : {
         "image_size" : [608, 608, 3],
-        "anchors" : [[10, 13], [16, 30], [33, 23], [30, 61], [62, 45], [59, 119], [116, 90], [156, 198], [373, 326]],
+        "anchors" : [
+                [10, 13], [16, 30], [33, 23], 
+                [30, 61], [62, 45], [59, 119], 
+                [116, 90], [156, 198], [373, 326]],
         "class_count" : 0,
 
         "debug_level" : 0
@@ -21,14 +24,14 @@
         "train_image" : "../data/detect/images/",
         "train_label" : "../data/detect/labels/",
 
-        "batch_size" : 2,
+        "batch_size" : 4,
 
         "init_lr" : 0.1,
         "lr_window" : 10,
         "lr_threshold" : 1,
-        "lr_decay" : 0.95,
+        "lr_decay" : 0.90,
 
-        "epochs" : 10,
+        "epochs" : 802,
         "checkpoint" : 200,
         "checkpoint_dir" : "./model/",
 
