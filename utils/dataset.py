@@ -91,7 +91,107 @@ class SavingProcess(object):
         meta['background'].save(imagename, 'PNG')
         return meta
 
+class CropPickingProcess(object):
+    def __init__(self, postfix):
+        self.postfix = postfix
     
+    def __call__(self, params, meta):
+        if meta is None:
+            return None
+
+        output = {}
+
+        output['title'] = meta['title'] + self.postfix
+        output['background_path'] = meta['background_path']
+        output['faces'] = [meta['faces'][person]['emote']['bbox'] for person in meta['faces']]
+
+        return output
+
+class CropResizingProcess(object):
+    def __init__(self, size, opt = PIL.Image.NEAREST):
+        self.size = size
+        self.opt = opt
+
+    def __call__(self, params, meta):
+        if meta is None:
+            return None
+
+        try :
+            orig_img = PIL.Image.open(params['in_dir'] + meta['background_path'])
+            orig_faces = meta['faces']
+            orig_w, orig_h = orig_img.size
+            
+            for _ in range(0, 10) :
+                if self.size[0] > orig_w :
+                    min_w = orig_w
+                else :
+                    min_w = self.size[0] // 2
+                max_w = orig_w
+                
+                if self.size[1] > orig_h :
+                    min_h = orig_h
+                else :
+                    min_h = self.size[1] // 2
+                max_h = orig_h
+
+                new_w = random.randrange(min_w, max_w, 1)
+                new_h = random.randrange(min_h, max_h, 1)
+                new_x1 = random.randrange(0, max_w - new_w, 1)
+                new_x2 = new_x1 + new_w
+                new_y1 = random.randrange(0, max_h - new_h, 1)
+                new_y2 = new_y1 + new_h
+            
+                if abs((orig_w / orig_h) - (new_w / new_h)) < 0.5:
+                    continue
+            
+                collide = False
+                new_faces = []
+                for face in orig_faces:
+                    if (face[0] - new_x1) * (face[2] - new_x1) < 0:
+                        collide = True
+                        break
+                    if (face[0] - new_x2) * (face[2] - new_x2) < 0:
+                        collide = True
+                        break
+                    if (face[1] - new_y1) * (face[3] - new_y1) < 0:
+                        collide = True
+                        break
+                    if (face[1] - new_y2) * (face[3] - new_y2) < 0:
+                        collide = True
+                        break
+                
+                    new_face = [face[0] - new_x1, face[1] - new_y1, face[2] - new_x1, face[3] - new_y1]
+                
+                    if new_face[0] < 0 or new_face[1] < 0 or new_face[2] < 0 or new_face[3] < 0:
+                        continue
+                    
+                    if new_face[0] > new_w or new_face[1] > new_h or new_face[2] > new_w or new_face[3] > new_h:
+                        continue
+                    
+                    new_faces.append(new_face)
+                    
+                if collide is True :
+                    continue
+                    
+                if len(new_faces) == 0:
+                    continue
+            
+                width_rate = self.size[0] / float(new_w)
+                height_rate = self.size[1] / float(new_h)
+            
+                new_faces = [[bbox[0] * width_rate, bbox[1] * height_rate, 
+                    bbox[2] * width_rate, bbox[3] * height_rate] for bbox in new_faces]
+            
+                meta['faces'] = new_faces
+                meta['background'] = orig_img.crop((new_x1, new_y1, new_x2, new_y2)).resize(self.size, self.opt)
+            
+                return meta
+            return None
+        except IOError:
+            print('cannot resize image :', params['in_dir'] + meta['background_path'])
+            return None
+        
+        
 class DetectionFolder(Dataset):
     def __init__(self, indexpath, imagedir, labeldir):
         self.imagedir = imagedir
