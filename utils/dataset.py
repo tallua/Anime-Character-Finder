@@ -29,13 +29,16 @@ class DetectionPreProcessor:
                 obj = proc(params, obj)
 
 class PickingProcess(object):
+    def __init__(self, postfix = ''):
+        self.postfix = postfix
+    
     def __call__(self, params, meta):
         if meta is None:
             return None
 
         output = {}
 
-        output['title'] = meta['title']
+        output['title'] = meta['title'] + self.postfix
         output['background_path'] = meta['background_path']
         output['faces'] = [meta['faces'][person]['emote']['bbox'] for person in meta['faces']]
 
@@ -91,21 +94,6 @@ class SavingProcess(object):
         meta['background'].save(imagename, 'PNG')
         return meta
 
-class CropPickingProcess(object):
-    def __init__(self, postfix):
-        self.postfix = postfix
-    
-    def __call__(self, params, meta):
-        if meta is None:
-            return None
-
-        output = {}
-
-        output['title'] = meta['title'] + self.postfix
-        output['background_path'] = meta['background_path']
-        output['faces'] = [meta['faces'][person]['emote']['bbox'] for person in meta['faces']]
-
-        return output
 
 class CropResizingProcess(object):
     def __init__(self, size, opt = PIL.Image.NEAREST):
@@ -121,18 +109,22 @@ class CropResizingProcess(object):
             orig_faces = meta['faces']
             orig_w, orig_h = orig_img.size
             
-            for _ in range(0, 10) :
-                if self.size[0] > orig_w :
-                    min_w = orig_w
-                else :
-                    min_w = self.size[0] // 2
-                max_w = orig_w
+            min_w = self.size[0] // 2
+            if self.size[0] > orig_w :
+                min_w = orig_w
+            max_w = orig_w
                 
-                if self.size[1] > orig_h :
-                    min_h = orig_h
-                else :
-                    min_h = self.size[1] // 2
-                max_h = orig_h
+            min_h = self.size[1] // 2
+            if self.size[1] > orig_h :
+                min_h = orig_h
+            max_h = orig_h
+            
+            
+            if min_w == max_w or min_h == max_h:
+                return None
+            
+            for _ in range(0, 10) :
+                
 
                 new_w = random.randrange(min_w, max_w, 1)
                 new_h = random.randrange(min_h, max_h, 1)

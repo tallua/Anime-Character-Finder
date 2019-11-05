@@ -15,6 +15,9 @@
         "coef_noobj" : 0.2,
         "coef_coord" : 20,
         "iou_threshold" : 0.8,
+        
+        "post_mAp" : 0.5,
+        "post_iou_threshold" : 0.8,
 
         "debug_level" : 0
     },
@@ -27,13 +30,17 @@
         "batch_size" : 4,
 
         "init_lr" : 0.1,
-        "lr_window" : 10,
+        "lr_window" : 12,
         "lr_threshold" : 1,
         "lr_decay" : 0.90,
 
-        "epochs" : 802,
-        "checkpoint" : 200,
+        "epochs" : 702,
+        "checkpoint" : 50,
         "checkpoint_dir" : "./model/",
+        
+        "i_drop_start" : 50,
+        "i_drop_per_epoch" : 1.0,
+        "i_drop_bottom_line" : 400,
 
         "debug_level" : 0,
         "use_tensorboard" : false,
