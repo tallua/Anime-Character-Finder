@@ -223,51 +223,6 @@ class YoloLoss(object):
             print('total_loss : ', total_loss)
         
         return total_loss
-        
-        
-        ###
-        num_batch = pred.shape[0]
-        
-        total_loss = torch.tensor([0.0], device=self.device)
-        
-        for batch_idx in range(num_batch):
-            
-            iou = self.calc_iou(pred[batch_idx], label[batch_idx])
-            responsibile = self.calc_responsibile(iou)
-            
-            # coord loss
-            coord_loss = self.calc_coord_loss(pred[batch_idx], label[batch_idx], responsibile)
-            mean_coord_loss = torch.mean(coord_loss) * self.coef_coord
-            
-            if self.debug_level >= 2:
-                print('mean_coord_loss', mean_coord_loss)
-            total_loss += mean_coord_loss
-            
-            # confidence loss
-            conf_loss = self.calc_confidence_loss(pred[batch_idx], iou, responsibile)
-            mean_conf_loss = torch.mean(conf_loss)
-            if self.debug_level >= 2:
-                print('mean_coord_loss', mean_coord_loss)
-            total_loss += mean_conf_loss
-            
-            # classification loss
-            # TODO
-            # not implemented (we firstly aims to classify bbox of face only)
-            
-            
-            if self.debug_level >= 2:
-                print('iou : ', iou)
-                print('iou type: ', iou.type())
-                print('iou shape: ', iou.shape)
-                print('responsibile : ', responsibile)
-                print('coord_loss : ', coord_loss)
-                print('coord_loss type : ', coord_loss.type())
-                print('conf_loss : ', conf_loss)
-                print('conf_loss type : ', conf_loss.type())
-        if self.debug_level >= 1:
-            print('loss : ', total_loss / num_batch * self.coef_total)
-        
-        return total_loss / num_batch
     
     # why does this works?
     def batch_iou(self, pred, label):
@@ -324,9 +279,8 @@ class YoloLoss(object):
                                 torch.ones_like(obj_mask), torch.ones_like(obj_mask) * self.coef_noobj)
         
         conf = torch.transpose(pred[..., 4].clone().repeat(obj_mask.shape[1], 1, 1), 0, 1)
-        
         obj_loss_all = coef_mask * F.mse_loss(obj_mask, conf, reduction='none')
-        
+            
         obj_loss = torch.tensor(0.0, device = self.device)
         for indx in range(0, label_len.shape[0]):
             obj_loss += torch.sum(obj_loss_all[indx][0:label_len[indx]])
@@ -351,8 +305,8 @@ class YoloLoss(object):
         
         x_loss = self.coef_coord * obj_mask * F.mse_loss(x1, x2, reduction='none')
         y_loss = self.coef_coord * obj_mask * F.mse_loss(y1, y2, reduction='none')
-        w_loss = self.coef_coord * obj_mask * F.mse_loss(torch.sqrt(w1), torch.sqrt(w2), reduction='none')
-        h_loss = self.coef_coord * obj_mask * F.mse_loss(torch.sqrt(h1), torch.sqrt(h2), reduction='none')
+        w_loss = self.coef_coord * obj_mask * F.mse_loss(w1, w2, reduction='none')
+        h_loss = self.coef_coord * obj_mask * F.mse_loss(h1, h2, reduction='none')
         
         coord_loss = x_loss + y_loss + w_loss + h_loss
         coord_loss = torch.sum(coord_loss)
@@ -361,10 +315,6 @@ class YoloLoss(object):
         
         return coord_loss
     
-
-    
-
-
     
 class PostProcessor(object):
     

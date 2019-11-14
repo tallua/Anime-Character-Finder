@@ -37,10 +37,6 @@
         "checkpoint" : 10,
         "checkpoint_dir" : "./model/",
         
-        "i_drop_start" : 80,
-        "i_drop_per_epoch" : 1.5,
-        "i_drop_bottom_line" : 400,
-        
         "debug_level" : 0,
         "use_tensorboard" : true,
         "use_anomaly_detection" : false,
@@ -49,6 +45,9 @@
 
     "test" : {
         "image_size" : [608, 608, 3],
+        
+        "conf_threshold" : 0.4,
+        "iou_threshold" : 0.4,
         
         "test_list" : "../data/detect/validation.txt",
         "test_image" : "../data/detect/images/",
