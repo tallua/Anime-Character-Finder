@@ -215,7 +215,7 @@ class DetectionFolder(Dataset):
         try :
             output['image'] = np.array(PIL.Image.open(imagepath)) / 255
             output['image'] = torch.from_numpy(output['image'])
-            output['image'] = output['image'].permute(2, 0, 1)
+            output['image'] = output['image'].permute(2, 0, 1)[0:3]
         except:
             return None
 

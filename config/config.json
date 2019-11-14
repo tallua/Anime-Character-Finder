@@ -2,9 +2,9 @@
     "model" : {
         "image_size" : [608, 608, 3],
         "anchors" : [
-                [10, 13], [16, 30], [33, 23], 
-                [30, 61], [62, 45], [59, 119], 
-                [116, 90], [156, 198], [373, 326]],
+                [30, 30], [50, 90], [90, 60], 
+                [85, 167], [176, 151], [137, 279], 
+                [301, 283], [184, 417], [366, 464]],
         "class_count" : 0,
 
         "debug_level" : 0
@@ -21,6 +21,7 @@
 
     "train" : {
         "train_list" : "../data/detect/train.txt",
+        "val_list" : "../data/detect/validation.txt",
         "train_image" : "../data/detect/images/",
         "train_label" : "../data/detect/labels/",
 
@@ -28,26 +29,28 @@
 
         "init_lr" : 0.1,
         "lr_window" : 12,
-        "lr_threshold" : 1,
-        "lr_decay" : 0.90,
+        "lr_threshold" : 0.98,
+        "lr_decay" : 0.5,
 
-        "epochs" : 702,
-        "checkpoint" : 50,
+        "epochs" : 301,
+        "checkpoint_start" : 120,
+        "checkpoint" : 10,
         "checkpoint_dir" : "./model/",
         
-        "i_drop_start" : 50,
-        "i_drop_per_epoch" : 1.0,
+        "i_drop_start" : 80,
+        "i_drop_per_epoch" : 1.5,
         "i_drop_bottom_line" : 400,
         
         "debug_level" : 0,
-        "use_tensorboard" : false,
-        "use_anomaly_detection" : false
+        "use_tensorboard" : true,
+        "use_anomaly_detection" : false,
+        "tensorboard_dir" : "./.tb"
     },
 
     "test" : {
         "image_size" : [608, 608, 3],
         
-        "test_list" : "../data/detect/test.txt",
+        "test_list" : "../data/detect/validation.txt",
         "test_image" : "../data/detect/images/",
         "test_label" : "../data/detect/labels/",
 
