@@ -43,6 +43,7 @@ class PickingProcess(object):
         output['faces'] = [meta['faces'][person]['emote']['bbox'] for person in meta['faces']]
         try:
             output['background'] = PIL.Image.open(params['in_dir'] + output['background_path'])
+            output['background'] = output['background'].crop(output['background'].getbbox())
         except IOError:
             print('cannot load image :', params['in_dir'] + output['background_path'])
             return None
@@ -64,12 +65,18 @@ class ResizingProcess(object):
         height_rate = self.size[1] / float(height)
         min_rate = min(width_rate, height_rate)
         
-        old_image = meta['background'].resize((int(width * min_rate), int(height * min_rate)), self.opt)
-        new_image = PIL.Image.new("RGB", (self.size[0], self.size[1]))
-        new_image.paste(old_image, old_image.getbbox())
+        try:
+            old_image = meta['background'].resize((int(width * min_rate), int(height * min_rate)), self.opt)
+            new_image = PIL.Image.new("RGB", (self.size[0], self.size[1]))
+            new_image.paste(old_image, old_image.getbbox())
+        except ValueError:
+            print(meta['title'])
+            print(old_image.getbbox())
         
         meta['faces'] = [[val * min_rate for val in bbox] for bbox in meta['faces']]
         meta['background'] = new_image
+        
+        return meta
 
 class SavingProcess(object):
     def __call__(self, params, meta):
@@ -95,6 +102,7 @@ class SavingProcess(object):
 
         imagename = params['out_image_dir'] + filename + '.png'
         meta['background'].save(imagename, 'PNG')
+        
         return meta
 
 
@@ -170,9 +178,15 @@ class CropResizingProcess(object):
             height_rate = self.size[1] / float(new_h)
             min_rate = min(width_rate, height_rate)
             
-            old_image = meta['background'].crop((new_x1, new_y1, new_x2, new_y2)).resize((int(new_w * min_rate), int(new_h * min_rate)), self.opt)
-            new_image = PIL.Image.new("RGB", (self.size[0], self.size[1]))
-            new_image.paste(old_image, old_image.getbbox())
+            try:
+                old_image = meta['background'].crop((new_x1, new_y1, new_x2, new_y2))
+                old_image = old_image.resize((int(new_w * min_rate), int(new_h * min_rate)), self.opt)
+                old_image = old_image.crop(old_image.getbbox())
+                new_image = PIL.Image.new("RGB", (self.size[0], self.size[1]))
+                new_image.paste(old_image, old_image.getbbox())
+            except ValueError:
+                print(meta['title'])
+                print(old_image.getbbox())
         
         
             meta['faces'] = [[val * min_rate for val in bbox] for bbox in new_faces]
