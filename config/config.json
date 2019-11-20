@@ -2,9 +2,9 @@
     "model" : {
         "image_size" : [608, 608, 3],
         "anchors" : [
-                [30, 30], [50, 90], [90, 60], 
-                [85, 167], [176, 151], [137, 279], 
-                [301, 283], [184, 417], [366, 464]],
+                [40, 65], [60, 110], [120, 80], 
+                [85, 163], [185, 152], [136, 277], 
+                [307, 283], [194, 410], [397, 484]],
         "class_count" : 0,
 
         "debug_level" : 0
@@ -12,10 +12,16 @@
 
     "loss" : {
         "image_size" : [608, 608, 3],
-        "coef_noobj" : 0.2,
-        "coef_coord" : 20,
-        "iou_threshold" : 0.8,
+        "coef_noobj" : 0.4,
+        "coef_coord" : 10,
+        "iou_threshold" : 0.85,
 
+        "post_conf_threshold" : 0.4,
+        "post_iou_threshold" : 0.4,
+        "acc_iou_threshold" : 0.5,
+        
+        "acc_start_epoch" : 80,
+        
         "debug_level" : 0
     },
 
@@ -28,14 +34,17 @@
         "batch_size" : 4,
 
         "init_lr" : 0.1,
-        "lr_window" : 12,
-        "lr_threshold" : 0.98,
+        "lr_window" : 10,
+        "lr_threshold" : 0.97,
         "lr_decay" : 0.5,
 
         "epochs" : 301,
-        "checkpoint_start" : 120,
+        "checkpoint_start" : 110,
         "checkpoint" : 10,
         "checkpoint_dir" : "./model/",
+        "target_accuaracy" : 0.85,
+        "target_recall" : 0.85,
+        "target_precision" : 0.95,
         
         "debug_level" : 0,
         "use_tensorboard" : true,
@@ -46,12 +55,15 @@
     "test" : {
         "image_size" : [608, 608, 3],
         
-        "conf_threshold" : 0.4,
-        "iou_threshold" : 0.4,
+        "post_conf_threshold" : 0.4,
+        "post_iou_threshold" : 0.4,
+        "acc_iou_threshold" : 0.5,
         
-        "test_list" : "../data/detect/validation.txt",
+        "test_list" : "../data/detect/test.txt",
         "test_image" : "../data/detect/images/",
         "test_label" : "../data/detect/labels/",
+        
+        "video_dir" : "../data/detect/video/",
 
         "debug_level" : 0
     }
