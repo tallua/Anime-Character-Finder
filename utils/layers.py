@@ -75,7 +75,7 @@ class YoloLayer(nn.Module):
         h_pred = torch.exp(torch.sigmoid(prediction_raw[..., 3])) * self.anchor_h  # Height
         
         bbox_pred = torch.stack((x_center_pred, y_center_pred, w_pred, h_pred), dim=4).view((num_batch, -1, 4)) #cxcywh
-        conf_pred = torch.sigmoid(prediction_raw[..., 4] * 10).view(num_batch, -1, 1)  # Conf
+        conf_pred = torch.sigmoid(prediction_raw[..., 4]).view(num_batch, -1, 1)  # Conf
         output = torch.cat((bbox_pred, conf_pred), -1)
         
         if self.attrib_cnt > 5:
