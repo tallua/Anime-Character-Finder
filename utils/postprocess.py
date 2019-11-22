@@ -7,13 +7,15 @@ class PostProcessor(object):
     def resize(self, from_size, to_size, prediction):
         x_rate = to_size[0] / from_size[0]
         y_rate = to_size[1] / from_size[1]
+        max_rate = max(x_rate, y_rate)
         
-        prediction['pred'] = np.array([pred * [x_rate, y_rate, x_rate, y_rate, 1] for pred in prediction['pred']])
-        prediction['label'] = np.array([label * [x_rate, y_rate, x_rate, y_rate, 1] for label in prediction['label']])
+        prediction['pred'] = np.array([pred * [max_rate, max_rate, max_rate, max_rate, 1] for pred in prediction['pred']])
+        prediction['label'] = np.array([label * [max_rate, max_rate, max_rate, max_rate, 1] for label in prediction['label']])
         
-        image = Image.fromarray((prediction['image'] * 255).astype('uint8'))
-        image = image.resize(to_size, Image.BILINEAR)
-        prediction['image'] = np.array(image)
+        #image = Image.fromarray((prediction['image'] * 255).astype('uint8'))
+        #image = image.crop(
+        #image = image.resize(to_size, Image.BILINEAR)
+        #prediction['image'] = np.array(image)
         
         return prediction
     

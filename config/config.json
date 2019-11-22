@@ -2,9 +2,9 @@
     "model" : {
         "image_size" : [608, 608, 3],
         "anchors" : [
-                [40, 65], [60, 110], [120, 80], 
-                [85, 163], [185, 152], [136, 277], 
-                [307, 283], [194, 410], [397, 484]],
+                [16, 19], [33, 39], [66, 73], 
+                [100, 108], [137, 150], [181, 193], 
+                [234, 248], [290, 313], [380, 377]],
         "class_count" : 0,
 
         "debug_level" : 0
@@ -12,15 +12,15 @@
 
     "loss" : {
         "image_size" : [608, 608, 3],
-        "coef_noobj" : 0.4,
+        "coef_noobj" : 0.33,
         "coef_coord" : 10,
-        "iou_threshold" : 0.85,
+        "iou_threshold" : 0.8,
+
+        "acc_start_epoch" : 80,
 
         "post_conf_threshold" : 0.4,
         "post_iou_threshold" : 0.4,
         "acc_iou_threshold" : 0.5,
-        
-        "acc_start_epoch" : 80,
         
         "debug_level" : 0
     },
@@ -35,15 +35,15 @@
 
         "init_lr" : 0.1,
         "lr_window" : 10,
-        "lr_threshold" : 0.97,
+        "lr_threshold" : 0.93,
         "lr_decay" : 0.5,
 
         "epochs" : 301,
-        "checkpoint_start" : 110,
+        "checkpoint_start" : 80,
         "checkpoint" : 10,
         "checkpoint_dir" : "./model/",
-        "target_accuaracy" : 0.85,
-        "target_recall" : 0.85,
+        "target_accuaracy" : 0.8,
+        "target_recall" : 0.8,
         "target_precision" : 0.95,
         
         "debug_level" : 0,
