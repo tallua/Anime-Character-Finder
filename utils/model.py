@@ -207,11 +207,13 @@ class YoloLoss(object):
         
         # objectness loss = B * P * 15
         obj_loss = self.batch_obj_loss(obj_mask, pred, label_len)
+        obj_loss = torch.sum(obj_loss)
         if self.debug_level >= 2:
             print('obj_loss : ', obj_loss)
         
         # coord loss = B * P * 15
         coord_loss = self.batch_coord_loss(obj_mask, pred, label)
+        coord_loss = torch.sum(coord_loss)
         if self.debug_level >= 2:
             print('coord_loss : ', coord_loss)
         
@@ -222,7 +224,7 @@ class YoloLoss(object):
         if self.debug_level >= 1:
             print('total_loss : ', total_loss)
         
-        return total_loss
+        return (total_loss, obj_loss, coord_loss)
     
     # why does this works?
     def batch_iou(self, pred, label):

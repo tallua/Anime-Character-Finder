@@ -10,21 +10,6 @@
         "debug_level" : 0
     },
 
-    "loss" : {
-        "image_size" : [608, 608, 3],
-        "coef_noobj" : 0.33,
-        "coef_coord" : 10,
-        "iou_threshold" : 0.8,
-
-        "acc_start_epoch" : 80,
-
-        "post_conf_threshold" : 0.4,
-        "post_iou_threshold" : 0.4,
-        "acc_iou_threshold" : 0.5,
-        
-        "debug_level" : 0
-    },
-
     "train" : {
         "train_list" : "../data/detect/train.txt",
         "val_list" : "../data/detect/validation.txt",
@@ -34,17 +19,32 @@
         "batch_size" : 4,
 
         "init_lr" : 0.1,
-        "lr_window" : 10,
-        "lr_threshold" : 0.93,
-        "lr_decay" : 0.5,
+        "lr_decay_start" : 70,
+        "lr_decay" : 0.97,
 
         "epochs" : 301,
         "checkpoint_start" : 80,
         "checkpoint" : 10,
         "checkpoint_dir" : "./model/",
+        
         "target_accuaracy" : 0.8,
         "target_recall" : 0.8,
         "target_precision" : 0.95,
+        
+        "loss" : {
+            "image_size" : [608, 608, 3],
+            "coef_noobj" : 0.32,
+            "coef_coord" : 10,
+            "iou_threshold" : 0.8,
+
+            "acc_start_epoch" : 80,
+
+            "post_conf_threshold" : 0.4,
+            "post_iou_threshold" : 0.4,
+            "acc_iou_threshold" : 0.5,
+        
+            "debug_level" : 0
+        },
         
         "debug_level" : 0,
         "use_tensorboard" : true,
@@ -59,7 +59,7 @@
         "post_iou_threshold" : 0.4,
         "acc_iou_threshold" : 0.5,
         
-        "test_list" : "../data/detect/test.txt",
+        "test_list" : "../data/detect/validation.txt",
         "test_image" : "../data/detect/images/",
         "test_label" : "../data/detect/labels/",
         
