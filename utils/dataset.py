@@ -374,7 +374,8 @@ class RandomDataCropProcess(object):
             del result[self.key_image] 
             del result[self.key_label] 
             del result[self.key_label_len] 
-            del result[self.key_index] 
+            del result[self.key_index]
+            return
             
         for _ in range(0, self.tries) :
             new_w = random.randrange(min_w, max_w, 1)
@@ -388,22 +389,24 @@ class RandomDataCropProcess(object):
                 continue
             
             collide = False
-            new_faces = []
-            for face in orig_faces:
-                if (face[0] - new_x1) * (face[2] - new_x1) < 0:
+            new_faces = orig_faces.copy()
+            new_faces[:, 0:4] = np.array([[face[0] - new_x1, face[1] - new_y1, face[2] - new_x1, face[3] - new_y1] 
+                                 for face in new_faces[:, 0:4]])
+            
+            new_faces_tmp = []
+            for new_face in new_faces:
+                if new_face[0] * new_face[2] < 0:
                     collide = True
                     break
-                if (face[0] - new_x2) * (face[2] - new_x2) < 0:
+                if (new_face[0] - new_w) * (new_face[2] - new_w) < 0:
                     collide = True
                     break
-                if (face[1] - new_y1) * (face[3] - new_y1) < 0:
+                if new_face[1] * new_face[3] < 0:
                     collide = True
                     break
-                if (face[1] - new_y2) * (face[3] - new_y2) < 0:
+                if (new_face[1] - new_h) * (new_face[3] - new_h) < 0:
                     collide = True
                     break
-                
-                new_face = [face[0] - new_x1, face[1] - new_y1, face[2] - new_x1, face[3] - new_y1]
                 
                 if new_face[0] < 0 or new_face[1] < 0 or new_face[2] < 0 or new_face[3] < 0:
                     continue
@@ -411,17 +414,20 @@ class RandomDataCropProcess(object):
                 if new_face[0] > new_w or new_face[1] > new_h or new_face[2] > new_w or new_face[3] > new_h:
                     continue
                     
-                new_faces.append(new_face)
+                new_faces_tmp.append(new_face)
+                
+            new_faces = np.array(new_faces_tmp)
                     
             if collide is True :
                 continue
                     
             if len(new_faces) == 0:
                 continue
+                
             
             try:
                 result[self.key_image] = result[self.key_image].crop((new_x1, new_y1, new_x2, new_y2))
-                result[self.key_label][:, 0:4] = [bbox for bbox in new_faces]
+                result[self.key_label] = new_faces
                 result[self.key_label_len] = len(new_faces)
             except ValueError:
                 print('cannot random crop : ', result['title'])
@@ -547,8 +553,8 @@ class ImagePreProcessor(object):
             KeyCopyProcess('label_len_og', 'label_len_r1'),
             KeyCopyProcess('label_len_og', 'label_len_r2'),
 
-            RandomDataCropProcess('image_r1', 'label_r1', 'label_len_r1', 'index_r1'),
-            RandomDataCropProcess('image_r2', 'label_r2', 'label_len_r2', 'index_r2'),
+            RandomDataCropProcess('image_r1', 'label_r1', 'label_len_r1', 'index_r1', tries = 15),
+            RandomDataCropProcess('image_r2', 'label_r2', 'label_len_r2', 'index_r2', tries = 15),
 
             DataResizeProcess('image_og', 'label_og', keep_ratio = True, to_size = target_size),
             DataResizeProcess('image_r1', 'label_r1', keep_ratio = True, to_size = target_size),
