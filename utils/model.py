@@ -172,8 +172,7 @@ class YoloLoss(object):
         self.device = config['device']
         
         self.coef_noobj = torch.tensor(config['coef_noobj']).to(self.device)
-        self.coef_coord = torch.tensor(config['coef_coord'] / 
-                                       (config['image_size'][0] * config['image_size'][1])).to(self.device) 
+        self.coef_coord = torch.tensor(config['coef_coord']).to(self.device) 
         self.iou_threshold = config['iou_threshold']
         
         self.debug_level = config['debug_level']
