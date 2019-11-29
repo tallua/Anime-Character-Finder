@@ -1,5 +1,7 @@
 from os import mkdir
+from os import listdir
 from pathlib import Path
+from fnmatch import fnmatch
 
 import json
 
@@ -340,10 +342,41 @@ class DataResizeProcess(object):
                 [label[0] * x_rate, label[1] * y_rate, label[2] * x_rate, label[3] * y_rate]
                 for label in result[self.key_label][:, 0:4]])
     
-#class DataCropProcess(object):
-#    def __init__(self, key_image, key_label = None, key_label_len = None, target_size = None):
-#        
-#        pass
+class DataCropProcess(object):
+    def __init__(self, key_image, key_label = None, key_label_len = None, key_bbox = None):
+        self.key_image = key_image
+        self.key_label = key_label
+        self.key_label_len = key_label_len
+        self.key_bbox = key_bbox
+        
+    def __call__(self, result):
+        
+        result[self.key_image] = result[self.key_image].crop(tuple(result[self.key_bbox]))
+        
+        if self.key_label is not None:
+            offset = result[self.key_bbox]
+            offset = np.array([offset[0], offset[1], offset[0], offset[1]])
+            w = offset[2] - offset[0]
+            h = offset[3] - offset[1]
+            
+            for i in range(0, result[self.key_label_len]):
+                result[self.key_label][i, :4] -= offset
+            
+            new_labels_tmp = []
+            
+            for label in result[self.key_label]:
+                if label[0] < 0 or label[1] < 0 or label[2] < 0 or label[3] < 0:
+                    continue
+                    
+                if label[0] > w or label[1] > h or label[2] > w or label[3] > h:
+                    continue
+                    
+                new_labels_tmp.append(label)
+            
+            result[self.key_label] = np.array(new_labels_tmp)
+            result[self.key_label_len] = result[self.key_label].shape[0]
+        return
+    
 
 class RandomDataCropProcess(object):
     def __init__(self, key_image, key_label, key_label_len, key_index, min_size = None, ratio_threshold = 0.3, tries = 10):
@@ -644,24 +677,59 @@ class LabeledDataset(Dataset):
 #    pass
 
 class VideoDataset(Dataset):
-    def __init__(self, image_dir, from_size, to_size):
-
+    def __init__(self, image_dir, from_size, to_size, splits = (1, 1)):
+        self.image_dir = image_dir
+        
+        self.splits = splits
+        self.splits_count = splits[0] * splits[1]
+        self.split_unit = (int(from_size[0] / (splits[0] + 1)), int(from_size[1] / (splits[1] + 1)))
+        self.crop_size = [self.split_unit[0] * 2, self.split_unit[1] * 2]
+        
+        image_list = listdir(image_dir)
+        self.image_list = []
+        for image_name in image_list:
+            if fnmatch(image_name, '*.png') is True:
+                self.image_list.append(image_name)
+        
         self.sequence = ProcessSequence([
             ImageLoadProcess('background_path', 'image_og'),
 
             KeyCopyProcess('image_og', 'image'),
-            DataResizeProcess('image', key_label = None, from_size = from_size, to_size = to_size),
+            DataCropProcess('image', key_bbox = 'crop_bbox'),
+            DataResizeProcess('image', key_label = None, from_size = self.crop_size, to_size = to_size),
             DataPaddingProcess('image', to_size),
 
             DataToTensorProcess('image', key_label = None, key_label_len = None)
         ])
     
     def __getitem__(self, index):
-        pass
-
+        
+        image_index = index // self.splits_count
+        split_index = index % self.splits_count
+        split_x_index = split_index % self.splits[0]
+        split_y_index = split_index // self.splits[0]
+        
+        split_x1 = self.split_unit[0] * split_x_index
+        split_x2 = split_x1 + self.crop_size[0]
+        split_y1 = self.split_unit[1] * split_y_index
+        split_y2 = split_y1 + self.crop_size[1]
+        
+        result = {}
+        result['title'] = self.image_list[image_index]
+        result['background_path'] = self.image_dir + self.image_list[image_index]
+        result['crop_bbox'] = np.array([split_x1, split_y1, split_x2, split_y2])
+        result['crop_size'] = np.array(self.crop_size)
+        result['split_index'] = split_index
+        
+        self.sequence(result)
+        
+        result['image_og'] = np.array(result['image_og'])
+        
+        return result
+        
     def __len__(self):
-        pass
-
+        return len(self.image_list) * self.splits_count
+        
 
 class URLDataset(Dataset):
     pass
