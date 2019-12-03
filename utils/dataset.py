@@ -16,239 +16,8 @@ import numpy as np
 import random
 
 
-class DetectionPreProcessor:
-    def __init__(self):
-        self.procs = []
-
-    def addProcessor(self, process):
-        self.procs.append(process)
-
-    def process(self, params = None):
-        jsonpath = params['in_json']
-        with open(jsonpath, 'rb') as jsonfile:
-            json_obj = json.load(jsonfile)
-
-        for obj in json_obj:
-            for proc in self.procs:
-                obj = proc(params, obj)
-
-class PickingProcess(object):
-    def __init__(self, postfix = ''):
-        self.postfix = postfix
-    
-    def __call__(self, params, meta):
-        if meta is None:
-            return None
-
-        output = {}
-
-        output['title'] = meta['title'] + self.postfix
-        output['background_path'] = meta['background_path']
-        output['faces'] = [meta['faces'][person]['emote']['bbox'] for person in meta['faces']]
-        try:
-            output['background'] = PIL.Image.open(params['in_dir'] + output['background_path'])
-            output['background'] = output['background'].crop(output['background'].getbbox())
-        except IOError:
-            print('cannot load image :', params['in_dir'] + output['background_path'])
-            return None
-
-        return output
-
-class ResizingProcess(object):
-    def __init__(self, size, opt = PIL.Image.NEAREST):
-        self.size = size
-        self.opt = opt
-
-    def __call__(self, params, meta):
-        if meta is None:
-            return None
-
-        width, height = meta['background'].size
-        
-        width_rate = self.size[0] / float(width)
-        height_rate = self.size[1] / float(height)
-        min_rate = min(width_rate, height_rate)
-        
-        try:
-            old_image = meta['background'].resize((int(width * min_rate), int(height * min_rate)), self.opt)
-            new_image = PIL.Image.new("RGB", (self.size[0], self.size[1]))
-            new_image.paste(old_image, old_image.getbbox())
-        except ValueError:
-            print(meta['title'])
-            print(old_image.getbbox())
-        
-        meta['faces'] = [[val * min_rate for val in bbox] for bbox in meta['faces']]
-        meta['background'] = new_image
-        
-        return meta
-
-class SavingProcess(object):
-    def __call__(self, params, meta):
-        if meta is None:
-            return None
-
-        try:
-            mkdir(params['out_dir'])
-        except:
-            pass
-
-        filename = params['prefix'] + '_' + meta['title']
-        with open(params['out_index'], 'a+') as metafile:
-            metafile.write(filename + '\n')
-
-        labelname = params['out_label_dir'] + filename + '.txt'
-        with open(labelname, 'w+') as labelfile:
-            for bbox in meta['faces']:
-                labelfile.write('0')
-                for val in bbox:
-                    labelfile.write(',%.4f' % val)
-                labelfile.write('\n')
-
-        imagename = params['out_image_dir'] + filename + '.png'
-        meta['background'].save(imagename, 'PNG')
-        
-        return meta
-
-
-class CropResizingProcess(object):
-    def __init__(self, size, opt = PIL.Image.NEAREST):
-        self.size = size
-        self.opt = opt
-
-    def __call__(self, params, meta):
-        if meta is None:
-            return None
-
-        orig_faces = meta['faces']
-        orig_w, orig_h = meta['background'].size
-            
-        min_w = self.size[0] // 2
-        if self.size[0] > orig_w :
-            min_w = orig_w
-        max_w = orig_w
-               
-        min_h = self.size[1] // 2
-        if self.size[1] > orig_h :
-            min_h = orig_h
-        max_h = orig_h
-                
-        if min_w == max_w or min_h == max_h:
-            return None
-            
-        for _ in range(0, 10) :
-            new_w = random.randrange(min_w, max_w, 1)
-            new_h = random.randrange(min_h, max_h, 1)
-            new_x1 = random.randrange(0, max_w - new_w, 1)
-            new_x2 = new_x1 + new_w
-            new_y1 = random.randrange(0, max_h - new_h, 1)
-            new_y2 = new_y1 + new_h
-            
-            if abs((orig_w / orig_h) - (new_w / new_h)) < 0.5:
-                continue
-            
-            collide = False
-            new_faces = []
-            for face in orig_faces:
-                if (face[0] - new_x1) * (face[2] - new_x1) < 0:
-                    collide = True
-                    break
-                if (face[0] - new_x2) * (face[2] - new_x2) < 0:
-                    collide = True
-                    break
-                if (face[1] - new_y1) * (face[3] - new_y1) < 0:
-                    collide = True
-                    break
-                if (face[1] - new_y2) * (face[3] - new_y2) < 0:
-                    collide = True
-                    break
-                
-                new_face = [face[0] - new_x1, face[1] - new_y1, face[2] - new_x1, face[3] - new_y1]
-                
-                if new_face[0] < 0 or new_face[1] < 0 or new_face[2] < 0 or new_face[3] < 0:
-                    continue
-                    
-                if new_face[0] > new_w or new_face[1] > new_h or new_face[2] > new_w or new_face[3] > new_h:
-                    continue
-                    
-                new_faces.append(new_face)
-                    
-            if collide is True :
-                continue
-                    
-            if len(new_faces) == 0:
-                continue
-            
-            width_rate = self.size[0] / float(new_w)
-            height_rate = self.size[1] / float(new_h)
-            min_rate = min(width_rate, height_rate)
-            
-            try:
-                old_image = meta['background'].crop((new_x1, new_y1, new_x2, new_y2))
-                old_image = old_image.resize((int(new_w * min_rate), int(new_h * min_rate)), self.opt)
-                old_image = old_image.crop(old_image.getbbox())
-                new_image = PIL.Image.new("RGB", (self.size[0], self.size[1]))
-                new_image.paste(old_image, old_image.getbbox())
-            except ValueError:
-                print(meta['title'])
-                print(old_image.getbbox())
-        
-        
-            meta['faces'] = [[val * min_rate for val in bbox] for bbox in new_faces]
-            meta['background'] = new_image
-            
-            return meta
-        return None
-        
-        
-class DetectionFolder(Dataset):
-    def __init__(self, indexpath, imagedir, labeldir):
-        self.imagedir = imagedir
-        self.labeldir = labeldir
-        with open(indexpath, 'r') as indexfile:
-            self.lines = indexfile.readlines()
-            self.lines = [line[:-1] for line in self.lines]
-
-    def __getitem__(self, index):
-        output = { }
-        output['title'] = self.lines[index]
-
-        imagepath = self.imagedir + output['title'] + '.png'
-        labelpath = self.labeldir + output['title'] + '.txt'
-
-        with open(labelpath, 'r') as labelfile:
-            labellines = labelfile.readlines()
-            output['label'] = np.array([labelline.split(',') for labelline in labellines])
-            output['label'] = output['label'].astype(np.float)
-            output['label'] = np.array([[(label[1] + label[3]) / 2, (label[2] + label[4]) / 2,
-                               label[3] - label[1], label[4] - label[2], label[0]] for label in output['label']])
-            output['label'] = torch.from_numpy(output['label'])
-            output['label_len'] = torch.tensor(output['label'].shape[0])
-            if output['label'].shape[0] > 15:
-                output['label'] = output['label'][0:15]
-            elif output['label'].shape[0] < 15:
-                output['label'] = torch.cat((output['label'].float(), torch.zeros(15 - output['label'].shape[0], 5)), 0)
-
-        try :
-            output['image'] = np.array(PIL.Image.open(imagepath)) / 255
-            output['image'] = torch.from_numpy(output['image'])
-            output['image'] = output['image'].permute(2, 0, 1)[0:3]
-        except:
-            return None
-
-        return output
-
-    def __len__(self):
-        return len(self.lines)
-    
-    def shuffle(self):
-        random.shuffle(self.lines)
-        
-
-
-
-
 ###
-# New ways to process data
+# Sequence to process data
 ###
 class ProcessSequence(object):
     def __init__(self, process = []):
@@ -379,17 +148,15 @@ class DataCropProcess(object):
     
 
 class RandomDataCropProcess(object):
-    def __init__(self, key_image, key_label, key_label_len, key_index, min_size = None, ratio_threshold = 0.3, tries = 10):
+    def __init__(self, key_image, key_label, min_size = None, ratio_threshold = 0.3, tries = 10):
         self.key_image = key_image
         self.key_label = key_label
-        self.key_label_len = key_label_len
-        self.key_index = key_index
         self.min_size = min_size
         self.ratio_threshold = ratio_threshold
         self.tries = tries
         
     def __call__(self, result):
-        if (self.key_image not in result) or (self.key_label not in result) or (self.key_label_len not in result):
+        if (self.key_image not in result) or (self.key_label not in result):
             return
         
         orig_w, orig_h = result[self.key_image].size
@@ -402,15 +169,9 @@ class RandomDataCropProcess(object):
             min_h = orig_h // 3
         max_w = orig_w
         max_h = orig_h
-                
-        if min_w >= max_w or min_h >= max_h:
-            del result[self.key_image] 
-            del result[self.key_label] 
-            del result[self.key_label_len] 
-            del result[self.key_index]
-            return
             
         for _ in range(0, self.tries) :
+            # random select area
             new_w = random.randrange(min_w, max_w, 1)
             new_h = random.randrange(min_h, max_h, 1)
             new_x1 = random.randrange(0, max_w - new_w, 1)
@@ -418,15 +179,17 @@ class RandomDataCropProcess(object):
             new_y1 = random.randrange(0, max_h - new_h, 1)
             new_y2 = new_y1 + new_h
 
-            if abs(1 - (new_w / orig_w)) < self.ratio_threshold:
+            # skip area if simillar to original image
+            if abs(1 - (new_w / orig_w)) < self.ratio_threshold and abs(1 - (new_h / orig_h)) < self.ratio_threshold:
                 continue
             
-            collide = False
+            # crop labels
             new_faces = orig_faces.copy()
             new_faces[:, 0:4] = np.array([[face[0] - new_x1, face[1] - new_y1, face[2] - new_x1, face[3] - new_y1] 
                                  for face in new_faces[:, 0:4]])
             
-            new_faces_tmp = []
+            # check collision with boundary
+            collide = False
             for new_face in new_faces:
                 if new_face[0] * new_face[2] < 0:
                     collide = True
@@ -440,16 +203,6 @@ class RandomDataCropProcess(object):
                 if (new_face[1] - new_h) * (new_face[3] - new_h) < 0:
                     collide = True
                     break
-                
-                if new_face[0] < 0 or new_face[1] < 0 or new_face[2] < 0 or new_face[3] < 0:
-                    continue
-                    
-                if new_face[0] > new_w or new_face[1] > new_h or new_face[2] > new_w or new_face[3] > new_h:
-                    continue
-                    
-                new_faces_tmp.append(new_face)
-                
-            new_faces = np.array(new_faces_tmp)
                     
             if collide is True :
                 continue
@@ -457,25 +210,22 @@ class RandomDataCropProcess(object):
             if len(new_faces) == 0:
                 continue
                 
-            
+            # end if success
             try:
                 result[self.key_image] = result[self.key_image].crop((new_x1, new_y1, new_x2, new_y2))
                 result[self.key_label] = new_faces
-                result[self.key_label_len] = len(new_faces)
             except ValueError:
                 print('cannot random crop : ', result['title'])
                 print('    bbox :', (new_x1, new_y1, new_x2, new_y2))
-                del result[self.key_image] 
-                del result[self.key_label] 
-                del result[self.key_label_len] 
-                del result[self.key_index]
+                
+                # fail mark
+                del result[self.key_image]
 
             return
         
-        del result[self.key_image] 
-        del result[self.key_label] 
-        del result[self.key_label_len] 
-        del result[self.key_index]
+        # fail mark
+        del result[self.key_image]
+        
 
 class DataPaddingProcess(object):
     def __init__(self, key_image, target_size):
@@ -512,6 +262,55 @@ class DataToTensorProcess(object):
 
         result[self.key_label] = torch.from_numpy(result[self.key_label])
         result[self.key_label_len] = torch.tensor(result[self.key_label_len])
+        
+class DataValidateProcess(object):
+    def __init__(self, key_image, key_label, key_label_len, key_index, threshold_size = (20, 20)):
+        self.key_image = key_image
+        self.key_label = key_label
+        self.key_label_len = key_label_len
+        self.key_index = key_index
+        
+        self.threshold_size = threshold_size
+    
+    
+    def __call__(self, result):
+        if (self.key_image not in result) or (self.key_label not in result):
+            if self.key_image in result:
+                del result[self.key_image]
+            if self.key_label in result:
+                del result[self.key_label]
+            if self.key_label_len in result:
+                del result[self.key_label_len]
+            if self.key_index in result:
+                del result[self.key_index]
+            return
+        
+        
+        w, h = result[self.key_image].size
+        
+        new_faces = []
+        for face in result[self.key_label]:
+            if face[0] < 0 or face[1] < 0 or face[2] < 0 or face[3] < 0:
+                continue
+            if face[0] >= w or face[1] >= h or face[2] >= w or face[3] >= h:
+                continue
+            if (face[2] - face[0] < self.threshold_size[0]) or (face[3] - face[1] < self.threshold_size[1]):
+                continue
+            
+            new_faces.append(face)
+            
+        if len(new_faces) == 0:
+            del result[self.key_image]
+            del result[self.key_label]
+            if self.key_label_len in result:
+                del result[self.key_label_len]
+            if self.key_index in result:
+                del result[self.key_index]
+                
+        result[self.key_label] = np.array(new_faces)
+        result[self.key_label_len] = len(new_faces)
+        return
+        
 
 class KeyCopyProcess(object):
     def __init__(self, key_from, key_to):
@@ -581,31 +380,55 @@ class ImagePreProcessor(object):
 
             KeyCopyProcess('image_og', 'image_r1'),
             KeyCopyProcess('image_og', 'image_r2'),
+            KeyCopyProcess('image_og', 'image_r3'),
+            #KeyCopyProcess('image_og', 'image_r4'),
             KeyCopyProcess('label_og', 'label_r1'),
             KeyCopyProcess('label_og', 'label_r2'),
+            KeyCopyProcess('label_og', 'label_r3'),
+            #KeyCopyProcess('label_og', 'label_r4'),
             KeyCopyProcess('label_len_og', 'label_len_r1'),
             KeyCopyProcess('label_len_og', 'label_len_r2'),
+            KeyCopyProcess('label_len_og', 'label_len_r3'),
+            #KeyCopyProcess('label_len_og', 'label_len_r4'),
 
-            RandomDataCropProcess('image_r1', 'label_r1', 'label_len_r1', 'index_r1', tries = 15),
-            RandomDataCropProcess('image_r2', 'label_r2', 'label_len_r2', 'index_r2', tries = 15),
+            RandomDataCropProcess('image_r1', 'label_r1', tries = 15),
+            RandomDataCropProcess('image_r2', 'label_r2', tries = 15),
+            RandomDataCropProcess('image_r3', 'label_r3', tries = 15),
+            #RandomDataCropProcess('image_r4', 'label_r4', tries = 15),
 
             DataResizeProcess('image_og', 'label_og', keep_ratio = True, to_size = target_size),
             DataResizeProcess('image_r1', 'label_r1', keep_ratio = True, to_size = target_size),
             DataResizeProcess('image_r2', 'label_r2', keep_ratio = True, to_size = target_size),
+            DataResizeProcess('image_r3', 'label_r3', keep_ratio = True, to_size = target_size),
+            #DataResizeProcess('image_r4', 'label_r4', keep_ratio = True, to_size = target_size),
+            
+            DataValidateProcess('image_og', 'label_og', 'label_len_og', 'index_og'),
+            DataValidateProcess('image_r1', 'label_r1', 'label_len_r1', 'index_r1'),
+            DataValidateProcess('image_r2', 'label_r2', 'label_len_r2', 'index_r2'),
+            DataValidateProcess('image_r3', 'label_r3', 'label_len_r3', 'index_r3'),
+            #DataValidateProcess('image_r4', 'label_r4', 'label_len_r4', 'index_r4'),
 
             DataPaddingProcess('image_og', target_size),
             DataPaddingProcess('image_r1', target_size),
             DataPaddingProcess('image_r2', target_size),
+            DataPaddingProcess('image_r3', target_size),
+            #DataPaddingProcess('image_r4', target_size),
 
             ImageSaveProcess('image_og', 'image_save_path_og'),
             ImageSaveProcess('image_r1', 'image_save_path_r1'),
             ImageSaveProcess('image_r2', 'image_save_path_r2'),
+            ImageSaveProcess('image_r3', 'image_save_path_r3'),
+            #ImageSaveProcess('image_r4', 'image_save_path_r4'),
             LabelSaveProcess('label_og', 'label_save_path_og'),
             LabelSaveProcess('label_r1', 'label_save_path_r1'),
             LabelSaveProcess('label_r2', 'label_save_path_r2'),
+            LabelSaveProcess('label_r3', 'label_save_path_r3'),
+            #LabelSaveProcess('label_r4', 'label_save_path_r4'),
             IndexSaveProcess('index_og', 'index_save_path'),
             IndexSaveProcess('index_r1', 'index_save_path'),
-            IndexSaveProcess('index_r2', 'index_save_path')
+            IndexSaveProcess('index_r2', 'index_save_path'),
+            IndexSaveProcess('index_r3', 'index_save_path'),
+            #IndexSaveProcess('index_r4', 'index_save_path')
         ])
         
     def __call__(self, params):
@@ -627,14 +450,20 @@ class ImagePreProcessor(object):
             result['image_save_path_og'] = params['out_image_dir'] + base_name + '.png'
             result['image_save_path_r1'] = params['out_image_dir'] + base_name + '_crop1.png'
             result['image_save_path_r2'] = params['out_image_dir'] + base_name + '_crop2.png'
+            result['image_save_path_r3'] = params['out_image_dir'] + base_name + '_crop3.png'
+            result['image_save_path_r4'] = params['out_image_dir'] + base_name + '_crop4.png'
         
             result['label_save_path_og'] = params['out_label_dir'] + base_name + '.txt'
             result['label_save_path_r1'] = params['out_label_dir'] + base_name + '_crop1.txt'
             result['label_save_path_r2'] = params['out_label_dir'] + base_name + '_crop2.txt'
+            result['label_save_path_r3'] = params['out_label_dir'] + base_name + '_crop3.txt'
+            result['label_save_path_r4'] = params['out_label_dir'] + base_name + '_crop4.txt'
 
             result['index_og'] = base_name
             result['index_r1'] = base_name + '_crop1'
             result['index_r2'] = base_name + '_crop2'
+            result['index_r3'] = base_name + '_crop3'
+            result['index_r4'] = base_name + '_crop4'
 
             result['index_save_path'] = params['out_index']
         

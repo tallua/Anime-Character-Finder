@@ -12,7 +12,7 @@
 
     "train" : {
         "train_list" : "../data/detect/train.txt",
-        "val_list" : "../data/detect/validation_all.txt",
+        "val_list" : "../data/detect/validation.txt",
         "train_image" : "../data/detect/images/",
         "train_label" : "../data/detect/labels/",
 
@@ -27,15 +27,15 @@
         "checkpoint" : 10,
         "checkpoint_dir" : "./model/",
         
-        "target_accuaracy" : 0.75,
-        "target_recall" : 0.75,
-        "target_precision" : 0.93,
+        "target_accuaracy" : 0.78,
+        "target_recall" : 0.78,
+        "target_precision" : 0.95,
         
         "loss" : {
             "image_size" : [608, 608, 3],
             "coef_noobj" : 0.41,
             "coef_coord" : 0.00004,
-            "iou_threshold" : 0.8,
+            "iou_threshold" : 0.85,
 
             "acc_start_epoch" : 80,
 

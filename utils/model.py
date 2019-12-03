@@ -10,8 +10,8 @@ class Darknet53(nn.Module):
     def __init__(self, config):
         super(Darknet53, self).__init__()
         self.baseline = nn.Sequential(
-            ConvLayer(config['image_size'][2], 32, 3, 1),
-            ConvLayer(32, 64, 3, 2),
+            ConvLayer(config['image_size'][2], 64, 3, 1),
+            ConvLayer(64, 64, 3, 2),
 
             ResidualLayer(64),
 
