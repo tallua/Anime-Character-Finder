@@ -2,9 +2,9 @@
     "model" : {
         "image_size" : [608, 608, 3],
         "anchors" : [
-                [18, 20], [36, 41], [68, 76], 
-                [101, 111], [137, 150], [176, 186], 
-                [223, 239], [290, 299], [389, 386]],
+                [20, 20], [40, 46], [74, 82], 
+                [113, 124], [156, 168], [200, 216], 
+                [253, 265], [316, 334], [410, 399]],
         "class_count" : 0,
 
         "debug_level" : 0
@@ -12,7 +12,7 @@
 
     "train" : {
         "train_list" : "../data/detect/train.txt",
-        "val_list" : "../data/detect/validation_all.txt",
+        "val_list" : "../data/detect/validation.txt",
         "train_image" : "../data/detect/images/",
         "train_label" : "../data/detect/labels/",
 
@@ -22,8 +22,9 @@
         "lr_decay_start" : 65,
         "lr_decay" : 0.97,
 
-        "epochs" : 201,
-        "checkpoint_start" : 70,
+        "epochs" : 181,
+        "checkpoint_start" : 75,
+
         "checkpoint" : 10,
         "checkpoint_dir" : "./model/",
         
@@ -35,7 +36,7 @@
             "image_size" : [608, 608, 3],
             "coef_noobj" : 0.43,
             "coef_coord" : 0.00004,
-            "iou_threshold" : 0.8,
+            "iou_threshold" : 0.75,
 
             "acc_start_epoch" : 80,
 
