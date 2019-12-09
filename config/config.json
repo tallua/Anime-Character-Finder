@@ -2,9 +2,9 @@
     "model" : {
         "image_size" : [608, 608, 3],
         "anchors" : [
-                [20, 20], [40, 46], [74, 82], 
-                [113, 124], [156, 168], [200, 216], 
-                [253, 265], [316, 334], [410, 399]],
+                [19, 19], [30, 30], [45, 45], 
+                [68, 68], [102, 102], [153, 153], 
+                [230, 230], [310, 310], [420, 420]],
         "class_count" : 0,
 
         "debug_level" : 0
@@ -23,10 +23,10 @@
         "lr_decay" : 0.97,
 
         "epochs" : 181,
-        "checkpoint_start" : 75,
+        "checkpoint_start" : 69,
 
         "checkpoint" : 10,
-        "checkpoint_dir" : "./model/",
+        "checkpoint_dir" : "./model/run12/",
         
         "target_accuaracy" : 0.78,
         "target_recall" : 0.78,
@@ -36,9 +36,9 @@
             "image_size" : [608, 608, 3],
             "coef_noobj" : 0.43,
             "coef_coord" : 0.00004,
-            "iou_threshold" : 0.75,
+            "iou_threshold" : 0.80,
 
-            "acc_start_epoch" : 80,
+            "acc_start_epoch" : 70,
 
             "post_conf_threshold" : 0.4,
             "post_iou_threshold" : 0.4,
@@ -50,7 +50,7 @@
         "debug_level" : 0,
         "use_tensorboard" : true,
         "use_anomaly_detection" : false,
-        "tensorboard_dir" : "./.tb"
+        "tensorboard_dir" : "./.tb/run12/"
     },
 
     "test" : {
@@ -60,7 +60,7 @@
         "post_iou_threshold" : 0.4,
         "acc_iou_threshold" : 0.5,
         
-        "test_list" : "../data/detect/validation.txt",
+        "test_list" : "../data/detect/test.txt",
         "test_image" : "../data/detect/images/",
         "test_label" : "../data/detect/labels/",
         
