@@ -49,20 +49,20 @@ class PostProcessor(object):
         
     # all bbox above conf_threshold
     def ABOVE(self, prediction, context):
-        above_thres = prediction[np.where(prediction[:, 4] > context['post_conf_threshold'])]
+        above_thres = prediction[np.where(prediction[:, 4] > context['conf_threshold'])]
         return above_thres
         
         
     # non-maximum suppression
     def NMS(self, prediction, context):
-        above_thres = prediction[np.where(prediction[:, 4] > context['post_conf_threshold'])]
+        above_thres = prediction[np.where(prediction[:, 4] > context['conf_threshold'])]
         pred_sorted = np.flip(np.argsort(above_thres[:, 4]))
             
         pred_result = []
         for p0 in pred_sorted:
             discard = False
             for p1 in pred_result:
-                if self.iou(above_thres[p0], above_thres[p1]) > context['post_iou_threshold']:
+                if self.iou(above_thres[p0], above_thres[p1]) > context['iou_threshold']:
                     discard = True
                     break
             if discard is False:
@@ -74,7 +74,7 @@ class PostProcessor(object):
     
     # custom 1
     def CUSTOM1(self, prediction, context):
-        above_thres = prediction[np.where(prediction[:, 4] > context['post_conf_threshold'])]
+        above_thres = prediction[np.where(prediction[:, 4] > context['conf_threshold'])]
         pred_sorted = np.flip(np.argsort(above_thres[:, 4]))
             
         pred_result = []
@@ -85,7 +85,7 @@ class PostProcessor(object):
                     
             for g1 in range(0, len(pred_result)):
                 iou_match = self.iou(above_thres[p0], np.mean(pred_result[g1], axis = 0))
-                if iou_match > context['post_iou_threshold']:
+                if iou_match > context['iou_threshold']:
                     new_group = False
                     if max_iou < iou_match:
                         max_iou = iou_match
@@ -100,7 +100,7 @@ class PostProcessor(object):
         return pred_result
         
     def CUSTOM2(self, prediction, context):
-        above_thres = np.copy(prediction[np.where(prediction[:, 4] > context['post_conf_threshold'])])
+        above_thres = np.copy(prediction[np.where(prediction[:, 4] > context['conf_threshold'])])
         pred_sorted = above_thres[np.flip(np.argsort(above_thres[:, 4]))]
             
         # merge with max iou until converge
@@ -117,7 +117,7 @@ class PostProcessor(object):
             p0 = pred_sorted[0]
             for p_indx in range(1, len(pred_sorted)):
                 iou_match = self.iou(p0, pred_sorted[p_indx])
-                if iou_match > context['post_iou_threshold'] and iou_match > max_iou:
+                if iou_match > context['iou_threshold'] and iou_match > max_iou:
                     max_iou = iou_match
                     max_indx = p_indx
                     

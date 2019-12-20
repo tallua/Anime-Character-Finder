@@ -53,15 +53,18 @@ class YoloLayer(nn.Module):
         self.anchor_cnt = len(anchors)
         self.attrib_cnt = config['attrib_count']
         
-        grid_tensor_x = torch.arange(start = 0.5, end = self.num_grid_x + 0.5).repeat(self.num_grid_y, 1)
+        grid_tensor_x = torch.arange(end = self.num_grid_x).repeat(self.num_grid_y, 1)
         grid_tensor_x = grid_tensor_x.to(config['device'], dtype = config['dtype'])
-        grid_tensor_y = (torch.arange(self.num_grid_y).repeat(self.num_grid_x, 1) + 0.5).t()
+        grid_tensor_y = torch.arange(end = self.num_grid_y).repeat(self.num_grid_x, 1).t()
         grid_tensor_y = grid_tensor_y.to(config['device'], dtype = config['dtype'])
         
         self.grid_x = grid_tensor_x.view([1, 1, self.num_grid_x, self.num_grid_y])
         self.grid_y = grid_tensor_y.view([1, 1, self.num_grid_y, self.num_grid_x])
         self.anchor_w = self.anchors[:, 0:1].view((1, -1, 1, 1)).float()
         self.anchor_h = self.anchors[:, 1:2].view((1, -1, 1, 1)).float()
+        
+        print('grid_x : ', self.grid_x)
+        print('grid_y : ', self.grid_y)
         
 
     def forward(self, x):

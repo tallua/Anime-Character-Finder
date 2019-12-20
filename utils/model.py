@@ -171,53 +171,34 @@ class YoloLoss(object):
         
         self.coef_noobj = torch.tensor(config['coef_noobj']).to(self.device)
         self.coef_coord = torch.tensor(config['coef_coord']).to(self.device) 
-        self.iou_threshold = config['iou_threshold']
+        self.iou_coverage = config['iou_coverage']
         
         self.iou_epsilon = torch.tensor(1e-9).to(self.device)
         
     def __call__(self, pred, label, label_len):
-        if self.debug_level >= 2:
-            print('pred shape: ', pred.shape)
-            print('label shape: ', label.shape)
-            print('label_len: ', label_len)
             
         # pred = B * P * Attrib
         # label = B * 15 * Attrib
         pred = F.relu(pred)
         label = F.relu(label)
         
-        if self.debug_level >= 3:
-            print('pred : ', pred)
-            print('label_len : ', label_len)
-            print('label : ', label)
-            
         # iou = B * P * 15
         # obj_mask = B * P * 15
         iou = self.batch_iou(pred, label)
         obj_mask = self.batch_obj_mask(iou, label_len)
-        if self.debug_level >= 3:
-            print('iou : ', iou)
-        if self.debug_level >= 2:
-            print('obj_mask.shape : ', obj_mask.shape)
         
         # objectness loss = B * P * 15
         obj_loss = self.batch_obj_loss(obj_mask, pred, label_len)
         obj_loss = torch.sum(obj_loss)
-        if self.debug_level >= 2:
-            print('obj_loss : ', obj_loss)
         
         # coord loss = B * P * 15
         coord_loss = self.batch_coord_loss(obj_mask, pred, label)
         coord_loss = torch.sum(coord_loss)
-        if self.debug_level >= 2:
-            print('coord_loss : ', coord_loss)
         
         # classfication loss = B * P * 15
         #class_loss = obj_mask * self.batch_class_loss(pred, label)
         
         total_loss = torch.sum(obj_loss + coord_loss)
-        if self.debug_level >= 1:
-            print('total_loss : ', total_loss)
         
         return (total_loss, obj_loss, coord_loss)
     
@@ -260,14 +241,9 @@ class YoloLoss(object):
         
     def batch_obj_mask(self, iou, label_len):
         max_iou, max_iou_indx = torch.max(iou, 2)
-        if self.debug_level >= 2:
-            print('max_iou ', max_iou)
         
-        obj_mask = torch.where(iou > max_iou.unsqueeze(2) * self.iou_threshold, 
+        obj_mask = torch.where(iou > max_iou.unsqueeze(2) * self.iou_coverage, 
                                torch.ones_like(iou), torch.zeros_like(iou))
-        
-        if self.debug_level >= 2:
-            print('nonzero ', torch.nonzero(obj_mask).shape[0])
         
         return obj_mask
     
@@ -281,11 +257,6 @@ class YoloLoss(object):
         obj_loss = torch.tensor(0.0, device = self.device)
         for indx in range(0, label_len.shape[0]):
             obj_loss += torch.sum(obj_loss_all[indx][0:label_len[indx]])
-        
-        if self.debug_level >= 2:
-            print('max conf : ', torch.max(obj_loss_all))
-        if self.debug_level >= 4:
-            print('obj_loss.shape', obj_loss.shape)
         
         return obj_loss
         
@@ -307,8 +278,6 @@ class YoloLoss(object):
         
         coord_loss = x_loss + y_loss + w_loss + h_loss
         coord_loss = torch.sum(coord_loss)
-        if self.debug_level >= 4:
-            print('coord_loss.shape', coord_loss.shape)
         
         return coord_loss
                   
