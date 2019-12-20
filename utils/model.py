@@ -71,8 +71,7 @@ class YoloNet(nn.Module):
     def __init__(self, config):
         super(YoloNet, self).__init__()
         
-        anchor_cnt = len(config['anchors'])
-        anchor_per_unit = anchor_cnt // 3
+        anchor_cnt = len(config['anchors_1'] + config['anchors_2'] + config['anchors_3'])
         attrib_count = config['attrib_count']
         
         self.conv3 = nn.Sequential(
@@ -85,8 +84,8 @@ class YoloNet(nn.Module):
 
         self.detect3 = nn.Sequential(
             ConvLayer(512, 1024, 3, 1, 1),
-            ConvLayer(1024, attrib_count * anchor_per_unit, 1, 1, 0),
-            YoloLayer(config, config['anchors'][anchor_per_unit * 2 : anchor_cnt], 32)
+            ConvLayer(1024, attrib_count * len(config['anchors_3']), 1, 1, 0),
+            YoloLayer(config, config['anchors_3'], 32)
         )
 
         self.conv2_1 = nn.Sequential(
@@ -104,8 +103,8 @@ class YoloNet(nn.Module):
 
         self.detect2 = nn.Sequential(
             ConvLayer(256, 512, 3, 1, 1),
-            ConvLayer(512, attrib_count * anchor_per_unit, 1, 1, 0),
-            YoloLayer(config, config['anchors'][anchor_per_unit : anchor_per_unit * 2], 16)
+            ConvLayer(512, attrib_count * len(config['anchors_2']), 1, 1, 0),
+            YoloLayer(config, config['anchors_2'], 16)
         )
 
         self.conv1_1 = nn.Sequential(
@@ -114,17 +113,17 @@ class YoloNet(nn.Module):
         )
 
         self.conv1_2 = nn.Sequential(
-            ConvLayer(384, 256, 1, 1, 0),
-            ConvLayer(256, 512, 3, 1, 1),
-            ConvLayer(512, 256, 1, 1, 0),
-            ConvLayer(256, 512, 3, 1, 1),
-            ConvLayer(512, 256, 1, 1, 0)
+            ConvLayer(384, 128, 1, 1, 0),
+            ConvLayer(128, 256, 3, 1, 1),
+            ConvLayer(256, 128, 1, 1, 0),
+            ConvLayer(128, 256, 3, 1, 1),
+            ConvLayer(256, 128, 1, 1, 0)
         )
 
         self.detect1 = nn.Sequential(
-            ConvLayer(256, 256, 3, 1, 1),
-            ConvLayer(256, attrib_count * anchor_per_unit, 1, 1, 0),
-            YoloLayer(config, config['anchors'][0 : anchor_per_unit], 8)
+            ConvLayer(128, 256, 3, 1, 1),
+            ConvLayer(256, attrib_count * len(config['anchors_1']), 1, 1, 0),
+            YoloLayer(config, config['anchors_1'], 8)
         )
 
     def forward(self, in1, in2, in3):
@@ -154,7 +153,6 @@ class YoloV3(nn.Module):
         
         assert config['image_size'][0] % 32 is 0, ('image_size[0] should be multiple of 32')
         assert config['image_size'][1] % 32 is 0, ('image_size[1] should be multiple of 32')
-        assert len(config['anchors']) % 3 is 0, ('len(anchors) should be multiple of 3')
         assert config['class_count'] >= 0, ('class_count should be equal or above 0')
         
         self.darknet = Darknet53(config)
@@ -174,8 +172,6 @@ class YoloLoss(object):
         self.coef_noobj = torch.tensor(config['coef_noobj']).to(self.device)
         self.coef_coord = torch.tensor(config['coef_coord']).to(self.device) 
         self.iou_threshold = config['iou_threshold']
-        
-        self.debug_level = config['debug_level']
         
         self.iou_epsilon = torch.tensor(1e-9).to(self.device)
         
