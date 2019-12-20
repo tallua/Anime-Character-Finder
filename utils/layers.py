@@ -63,9 +63,6 @@ class YoloLayer(nn.Module):
         self.anchor_w = self.anchors[:, 0:1].view((1, -1, 1, 1)).float()
         self.anchor_h = self.anchors[:, 1:2].view((1, -1, 1, 1)).float()
         
-        print('grid_x : ', self.grid_x)
-        print('grid_y : ', self.grid_y)
-        
 
     def forward(self, x):
         num_batch = x.size(0)
