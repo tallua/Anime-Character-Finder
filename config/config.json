@@ -16,8 +16,8 @@
             "image_dir" : "../data/detect/images/",
             "label_dir" : "../data/detect/labels/",
             
-            "batch_size" : 2,
-            "num_workers" : 2
+            "batch_size" : 4,
+            "num_workers" : 4
         },
         
         "plan" : {
@@ -64,7 +64,7 @@
 
                 "accuracy" : 0.85,
                 "recall" : 0.85,
-                "precision" : 0.98
+                "precision" : 0.95
             },
 
             "post" : {
@@ -75,7 +75,7 @@
         },
         
         "loss" : {
-            "coef_noobj" : 0.48,
+            "coef_noobj" : 0.43,
             "coef_coord" : 0.00004,
             "iou_coverage" : 0.80
         },

@@ -256,7 +256,7 @@ class YoloLoss(object):
             
         obj_loss = torch.tensor(0.0, device = self.device)
         for indx in range(0, label_len.shape[0]):
-            obj_loss += torch.sum(obj_loss_all[indx][0:label_len[indx]])
+            obj_loss = obj_loss + torch.sum(obj_loss_all[indx][0:label_len[indx]])
         
         return obj_loss
         
