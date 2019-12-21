@@ -1,10 +1,10 @@
 {
     "model" : {
-        "image_size" : [608, 608, 3],
+        "image_size" : [608, 416, 3],
         
-        "anchors_1" : [[19, 19], [30, 30], [45, 45]],
-        "anchors_2" : [[68, 68], [102, 102], [153, 153]], 
-        "anchors_3" : [[230, 230], [310, 310], [420, 420]],
+        "anchors_1" : [[17, 13], [37, 42], [70, 75]],
+        "anchors_2" : [[102, 108], [136, 146], [175, 186]], 
+        "anchors_3" : [[221, 230], [271, 279], [354, 329]],
         
         "class_count" : 0
     },
@@ -29,7 +29,7 @@
         },
         
         "checkpoint" : {
-            "save_dir" : "./model/",
+            "save_dir" : "./model/run16/",
             
             "model_prefix" : "model_",
             
@@ -39,7 +39,7 @@
         
         "log" : {
             "tb_enable" : true,
-            "tb_dir" : "./.tb/",
+            "tb_dir" : "./.tb/run16/",
 
             "console_enable" : true
         },
@@ -56,7 +56,7 @@
             },
 
             "target" : {
-                "save_dir" : "./model/",
+                "save_dir" : "./model/run16/",
 
                 "model_prefix" : "output_",
 

@@ -113,16 +113,16 @@ class YoloNet(nn.Module):
         )
 
         self.conv1_2 = nn.Sequential(
-            ConvLayer(384, 128, 1, 1, 0),
-            ConvLayer(128, 256, 3, 1, 1),
-            ConvLayer(256, 128, 1, 1, 0),
-            ConvLayer(128, 256, 3, 1, 1),
-            ConvLayer(256, 128, 1, 1, 0)
+            ConvLayer(384, 256, 1, 1, 0),
+            ConvLayer(256, 512, 3, 1, 1),
+            ConvLayer(512, 256, 1, 1, 0),
+            ConvLayer(256, 512, 3, 1, 1),
+            ConvLayer(512, 256, 1, 1, 0)
         )
 
         self.detect1 = nn.Sequential(
-            ConvLayer(128, 256, 3, 1, 1),
-            ConvLayer(256, attrib_count * len(config['anchors_1']), 1, 1, 0),
+            ConvLayer(256, 512, 3, 1, 1),
+            ConvLayer(512, attrib_count * len(config['anchors_1']), 1, 1, 0),
             YoloLayer(config, config['anchors_1'], 8)
         )
 

@@ -59,7 +59,7 @@ class YoloLayer(nn.Module):
         grid_tensor_y = grid_tensor_y.to(config['device'], dtype = config['dtype'])
         
         self.grid_x = grid_tensor_x.view([1, 1, self.num_grid_x, self.num_grid_y])
-        self.grid_y = grid_tensor_y.view([1, 1, self.num_grid_y, self.num_grid_x])
+        self.grid_y = grid_tensor_y.view([1, 1, self.num_grid_x, self.num_grid_y])
         self.anchor_w = self.anchors[:, 0:1].view((1, -1, 1, 1)).float()
         self.anchor_h = self.anchors[:, 1:2].view((1, -1, 1, 1)).float()
         
