@@ -23,7 +23,6 @@ TODO
 [Yolo 3 Document](https://pjreddie.com/media/files/papers/YOLOv3.pdf)
 [Referenced project](https://github.com/westerndigitalcorporation/YOLOv3-in-PyTorch)
 
-
 # Model
 [In Progress](https://github.com/COSE474-WhereIsMyWaifu/detector)
 
