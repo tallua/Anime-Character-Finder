@@ -165,18 +165,18 @@ class RandomDataCropProcess(object):
         if self.min_size is not None:
             min_w, min_h = min_size
         else:
-            min_w = orig_w // 3
-            min_h = orig_h // 3
-        max_w = orig_w
-        max_h = orig_h
+            min_w = orig_w // 8
+            min_h = orig_h // 8
+        max_w = orig_w * 3 // 4
+        max_h = orig_h * 3 // 4
             
         for _ in range(0, self.tries) :
             # random select area
             new_w = random.randrange(min_w, max_w, 1)
             new_h = random.randrange(min_h, max_h, 1)
-            new_x1 = random.randrange(0, max_w - new_w, 1)
+            new_x1 = random.randrange(0, orig_w - new_w, 1)
             new_x2 = new_x1 + new_w
-            new_y1 = random.randrange(0, max_h - new_h, 1)
+            new_y1 = random.randrange(0, orig_h - new_h, 1)
             new_y2 = new_y1 + new_h
 
             # skip area if simillar to original image
@@ -395,63 +395,64 @@ class IndexSaveProcess(object):
 # Predfined Datasets
 ###
 class ImagePreProcessor(object):
-    def __init__(self, target_size):
+    def __init__(self, target_size, threshold_size = (10, 10)):
         self.sequence = ProcessSequence([
             ImageLoadProcess('background_path', 'image_og'),
 
             KeyCopyProcess('image_og', 'image_r1'),
             KeyCopyProcess('image_og', 'image_r2'),
-            #KeyCopyProcess('image_og', 'image_r3'),
-            #KeyCopyProcess('image_og', 'image_r4'),
+            KeyCopyProcess('image_og', 'image_r3'),
+            KeyCopyProcess('image_og', 'image_r4'),
             KeyCopyProcess('label_og', 'label_r1'),
             KeyCopyProcess('label_og', 'label_r2'),
-            #KeyCopyProcess('label_og', 'label_r3'),
-            #KeyCopyProcess('label_og', 'label_r4'),
+            KeyCopyProcess('label_og', 'label_r3'),
+            KeyCopyProcess('label_og', 'label_r4'),
             KeyCopyProcess('label_len_og', 'label_len_r1'),
             KeyCopyProcess('label_len_og', 'label_len_r2'),
-            #KeyCopyProcess('label_len_og', 'label_len_r3'),
-            #KeyCopyProcess('label_len_og', 'label_len_r4'),
+            KeyCopyProcess('label_len_og', 'label_len_r3'),
+            KeyCopyProcess('label_len_og', 'label_len_r4'),
 
             RandomDataCropProcess('image_r1', 'label_r1', tries = 15),
             RandomDataCropProcess('image_r2', 'label_r2', tries = 15),
-            #RandomDataCropProcess('image_r3', 'label_r3', tries = 15),
-            #RandomDataCropProcess('image_r4', 'label_r4', tries = 15),
+            RandomDataCropProcess('image_r3', 'label_r3', tries = 15),
+            RandomDataCropProcess('image_r4', 'label_r4', tries = 15),
 
             DataResizeProcess('image_og', 'label_og', keep_ratio = True, to_size = target_size),
             DataResizeProcess('image_r1', 'label_r1', keep_ratio = True, to_size = target_size),
             DataResizeProcess('image_r2', 'label_r2', keep_ratio = True, to_size = target_size),
-            #DataResizeProcess('image_r3', 'label_r3', keep_ratio = True, to_size = target_size),
-            #DataResizeProcess('image_r4', 'label_r4', keep_ratio = True, to_size = target_size),
+            DataResizeProcess('image_r3', 'label_r3', keep_ratio = True, to_size = target_size),
+            DataResizeProcess('image_r4', 'label_r4', keep_ratio = True, to_size = target_size),
 
             DataFlipLRProcess('image_r2', 'label_r2'),
+            DataFlipLRProcess('image_r4', 'label_r4'),
             
-            DataValidateProcess('image_og', 'label_og', 'label_len_og', 'index_og', threshold_size = (16, 16)),
-            DataValidateProcess('image_r1', 'label_r1', 'label_len_r1', 'index_r1', threshold_size = (16, 16)),
-            DataValidateProcess('image_r2', 'label_r2', 'label_len_r2', 'index_r2', threshold_size = (16, 16)),
-            #DataValidateProcess('image_r3', 'label_r3', 'label_len_r3', 'index_r3'),
-            #DataValidateProcess('image_r4', 'label_r4', 'label_len_r4', 'index_r4'),
+            DataValidateProcess('image_og', 'label_og', 'label_len_og', 'index_og', threshold_size = threshold_size),
+            DataValidateProcess('image_r1', 'label_r1', 'label_len_r1', 'index_r1', threshold_size = threshold_size),
+            DataValidateProcess('image_r2', 'label_r2', 'label_len_r2', 'index_r2', threshold_size = threshold_size),
+            DataValidateProcess('image_r3', 'label_r3', 'label_len_r3', 'index_r3', threshold_size = threshold_size),
+            DataValidateProcess('image_r4', 'label_r4', 'label_len_r4', 'index_r4', threshold_size = threshold_size),
 
             DataPaddingProcess('image_og', target_size),
             DataPaddingProcess('image_r1', target_size),
             DataPaddingProcess('image_r2', target_size),
-            #DataPaddingProcess('image_r3', target_size),
-            #DataPaddingProcess('image_r4', target_size),
+            DataPaddingProcess('image_r3', target_size),
+            DataPaddingProcess('image_r4', target_size),
 
             ImageSaveProcess('image_og', 'image_save_path_og'),
             ImageSaveProcess('image_r1', 'image_save_path_r1'),
             ImageSaveProcess('image_r2', 'image_save_path_r2'),
-            #ImageSaveProcess('image_r3', 'image_save_path_r3'),
-            #ImageSaveProcess('image_r4', 'image_save_path_r4'),
+            ImageSaveProcess('image_r3', 'image_save_path_r3'),
+            ImageSaveProcess('image_r4', 'image_save_path_r4'),
             LabelSaveProcess('label_og', 'label_save_path_og'),
             LabelSaveProcess('label_r1', 'label_save_path_r1'),
             LabelSaveProcess('label_r2', 'label_save_path_r2'),
-            #LabelSaveProcess('label_r3', 'label_save_path_r3'),
-            #LabelSaveProcess('label_r4', 'label_save_path_r4'),
+            LabelSaveProcess('label_r3', 'label_save_path_r3'),
+            LabelSaveProcess('label_r4', 'label_save_path_r4'),
             IndexSaveProcess('index_og', 'index_save_path'),
             IndexSaveProcess('index_r1', 'index_save_path'),
-            IndexSaveProcess('index_r2', 'index_save_path')
-            #IndexSaveProcess('index_r3', 'index_save_path'),
-            #IndexSaveProcess('index_r4', 'index_save_path')
+            IndexSaveProcess('index_r2', 'index_save_path'),
+            IndexSaveProcess('index_r3', 'index_save_path'),
+            IndexSaveProcess('index_r4', 'index_save_path')
         ])
         
     def __call__(self, params):
@@ -473,20 +474,20 @@ class ImagePreProcessor(object):
             result['image_save_path_og'] = params['out_image_dir'] + base_name + '.png'
             result['image_save_path_r1'] = params['out_image_dir'] + base_name + '_crop1.png'
             result['image_save_path_r2'] = params['out_image_dir'] + base_name + '_crop2.png'
-            #result['image_save_path_r3'] = params['out_image_dir'] + base_name + '_crop3.png'
-            #result['image_save_path_r4'] = params['out_image_dir'] + base_name + '_crop4.png'
+            result['image_save_path_r3'] = params['out_image_dir'] + base_name + '_crop3.png'
+            result['image_save_path_r4'] = params['out_image_dir'] + base_name + '_crop4.png'
         
             result['label_save_path_og'] = params['out_label_dir'] + base_name + '.txt'
             result['label_save_path_r1'] = params['out_label_dir'] + base_name + '_crop1.txt'
             result['label_save_path_r2'] = params['out_label_dir'] + base_name + '_crop2.txt'
-            #result['label_save_path_r3'] = params['out_label_dir'] + base_name + '_crop3.txt'
-            #result['label_save_path_r4'] = params['out_label_dir'] + base_name + '_crop4.txt'
+            result['label_save_path_r3'] = params['out_label_dir'] + base_name + '_crop3.txt'
+            result['label_save_path_r4'] = params['out_label_dir'] + base_name + '_crop4.txt'
 
             result['index_og'] = base_name
             result['index_r1'] = base_name + '_crop1'
             result['index_r2'] = base_name + '_crop2'
-            #result['index_r3'] = base_name + '_crop3'
-            #result['index_r4'] = base_name + '_crop4'
+            result['index_r3'] = base_name + '_crop3'
+            result['index_r4'] = base_name + '_crop4'
 
             result['index_save_path'] = params['out_index']
         

@@ -76,8 +76,8 @@ class YoloLayer(nn.Module):
         # get outputs
         x_center_pred = (torch.sigmoid(prediction_raw[..., 0]) + self.grid_x) * self.stride # center x
         y_center_pred = (torch.sigmoid(prediction_raw[..., 1]) + self.grid_y) * self.stride  # center y
-        w_pred = torch.exp(torch.sigmoid(prediction_raw[..., 2])) * self.anchor_w  # width
-        h_pred = torch.exp(torch.sigmoid(prediction_raw[..., 3])) * self.anchor_h  # height
+        w_pred = torch.add(torch.sigmoid(prediction_raw[..., 2]), 1) * self.anchor_w  # width
+        h_pred = torch.add(torch.sigmoid(prediction_raw[..., 3]), 1) * self.anchor_h  # height
         
         bbox_pred = torch.stack((x_center_pred, y_center_pred, w_pred, h_pred), dim=4).view((num_batch, -1, 4)) #cxcywh
         conf_pred = torch.sigmoid(prediction_raw[..., 4]).view(num_batch, -1, 1)  # conf

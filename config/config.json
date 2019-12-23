@@ -1,10 +1,10 @@
 {
     "model" : {
-        "image_size" : [608, 416, 3],
+        "image_size" : [416, 416, 3],
         
-        "anchors_1" : [[17, 13], [37, 42], [70, 75]],
-        "anchors_2" : [[102, 108], [136, 146], [175, 186]], 
-        "anchors_3" : [[221, 230], [271, 279], [354, 329]],
+        "anchors_1" : [[10, 10], [15, 15], [22, 22]],
+        "anchors_2" : [[33, 33], [50, 50], [75, 75]], 
+        "anchors_3" : [[113, 113], [170, 170], [256, 256]],
         
         "class_count" : 0
     },
@@ -16,20 +16,24 @@
             "image_dir" : "../data/detect/images/",
             "label_dir" : "../data/detect/labels/",
             
-            "batch_size" : 4,
-            "num_workers" : 4
+            "batch_size" : 6,
+            "num_workers" : 6
         },
         
         "plan" : {
             "epochs" : 181,
             
             "lr_init" : 0.1,
-            "lr_decay_start_epoch" : 65,
-            "lr_decay_rate" : 0.97
+            
+            "lr_window_size" : 10,
+            "lr_threshold" : 0.8,
+            
+            "lr_decay_start_epoch" : 55,
+            "lr_decay_rate" : 0.8
         },
         
         "checkpoint" : {
-            "save_dir" : "./model/run16/",
+            "save_dir" : "./model/run18/",
             
             "model_prefix" : "model_",
             
@@ -39,7 +43,7 @@
         
         "log" : {
             "tb_enable" : true,
-            "tb_dir" : "./.tb/run16/",
+            "tb_dir" : "./.tb/run18/",
 
             "console_enable" : true
         },
@@ -56,7 +60,7 @@
             },
 
             "target" : {
-                "save_dir" : "./model/run16/",
+                "save_dir" : "./model/run18/",
 
                 "model_prefix" : "output_",
 
@@ -85,19 +89,27 @@
 
 
     "test" : {
-        "image_size" : [608, 608, 3],
+        "set" : {
+            "index" : "../data/detect/test.txt",
+            "image_dir" : "../data/detect/images/",
+            "label_dir" : "../data/detect/labels/",
+            
+            "batch_size" : 8,
+            "num_workers" : 4
+        },
         
-        "post_conf_threshold" : 0.4,
-        "post_iou_threshold" : 0.4,
-        "acc_iou_threshold" : 0.5,
+        "post" : {
+            "conf_threshold" : 0.4,
+            "iou_threshold" : 0.4,
+            "acc_iou_threshold" : 0.5
+        },
         
-        "test_list" : "../data/detect/test.txt",
-        "test_image" : "../data/detect/images/",
-        "test_label" : "../data/detect/labels/",
+        "font" : {
+            "path" : "arial.ttf",
+            "size" : 16
+        },
         
-        "video_dir" : "../data/detect/video/",
-
-        "debug_level" : 0
+        "video_dir" : "../data/detect/video/"
     }
 }
 
