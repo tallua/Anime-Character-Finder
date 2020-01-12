@@ -584,7 +584,7 @@ class VideoDataset(Dataset):
         return len(self.image_list) * self.splits_count
         
 
-class URLDataset(Dataset):
+class ImageDataset(Dataset):
     pass
 
 

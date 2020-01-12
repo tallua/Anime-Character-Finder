@@ -88,8 +88,14 @@
     },
 
 
-    "test" : {
-        "set" : {
+    "eval" : {
+        "mode" : "image",
+
+        "set_image" : {
+
+        },
+
+        "set_labeled" : {
             "index" : "../data/detect/test.txt",
             "image_dir" : "../data/detect/images/",
             "label_dir" : "../data/detect/labels/",
@@ -97,19 +103,32 @@
             "batch_size" : 8,
             "num_workers" : 4
         },
-        
+
+        "set_video" : {
+            "video_dir" : "../data/detect/video/",
+            
+            "batch_size" : 8,
+            "num_workers" : 4
+        },
+
+        "output" : "",
+        "timestamp" : false,
+
         "post" : {
             "conf_threshold" : 0.4,
             "iou_threshold" : 0.4,
             "acc_iou_threshold" : 0.5
         },
         
-        "font" : {
-            "path" : "arial.ttf",
-            "size" : 16
-        },
+        "plot" : {
+            "opts" : ["GMS"],
+            
+            "font_path" : "arial.ttf",
+            "font_size" : 16,
+
+            "border_size" : 1
+        }
         
-        "video_dir" : "../data/detect/video/"
     }
 }
 
