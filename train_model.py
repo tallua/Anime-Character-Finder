@@ -218,11 +218,12 @@ def train(model, loss_func, optimizer, scheduler, train_context, train_config, e
         tb_writer.flush()
         tb_writer.close()
 # %%
+## Config
 def create_config():
 
     parser = argparse.ArgumentParser(description = 'Train model')
 
-    parser.add_argument('-config', help='path to config file', action='store', default='./config/config.json',  type=str)
+    parser.add_argument('-config', help='path to config file. default:"./config/config.json"', action='store', default='./config/config.json',  type=str)
     parser.add_argument('-index', help='index of training set', type=str)
     parser.add_argument('-epoch', help='total epoch on training', type=int)
     parser.add_argument('-lr_init', help='initial learning rate on training', type=float)
@@ -252,6 +253,7 @@ def create_config():
 
 
 # %%
+## Main
 if __name__ == '__main__':
 
     ## Load Config
