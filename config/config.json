@@ -16,8 +16,8 @@
             "image_dir" : "../data/detect/images/",
             "label_dir" : "../data/detect/labels/",
             
-            "batch_size" : 6,
-            "num_workers" : 6
+            "batch_size" : 4,
+            "num_workers" : 4
         },
         
         "plan" : {
@@ -35,7 +35,7 @@
         "checkpoint" : {
             "save_dir" : "./model/run18/",
             
-            "model_prefix" : "model_",
+            "model_prefix" : "checkpoint_",
             
             "start_epoch" : 70,
             "interval_epoch" : 10

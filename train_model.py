@@ -5,6 +5,7 @@ import torch
 from torch import autograd
 from torch.utils.data import DataLoader
 
+import argparse
 import sys
 import json
 import gc
@@ -216,6 +217,39 @@ def train(model, loss_func, optimizer, scheduler, train_context, train_config, e
     if tb_writer is not None:
         tb_writer.flush()
         tb_writer.close()
+# %%
+def create_config():
+
+    parser = argparse.ArgumentParser(description = 'Train model')
+
+    parser.add_argument('-config', help='path to config file', action='store', default='./config/config.json',  type=str)
+    parser.add_argument('-index', help='index of training set', type=str)
+    parser.add_argument('-epoch', help='total epoch on training', type=int)
+    parser.add_argument('-lr_init', help='initial learning rate on training', type=float)
+    parser.add_argument('-lr_decay', help='ly decay on training', type=float)
+    parser.add_argument('-out_checkpoint', help='output directory for checkpoint', type=str)
+    parser.add_argument('-out_target', help='output directory for target', type=str)
+
+    parsed = parser.parse_args()
+
+    with open(parsed.config, "r") as config_file:
+        main_config = json.load(config_file)
+    
+    if parsed.index is not None:
+        main_config['train']['set']['index'] = parsed.index
+    if parsed.epoch is not None:
+        main_config['train']['plan']['epochs'] = parsed.epoch
+    if parsed.lr_init is not None:
+        main_config['train']['plan']['lr_init'] = parsed.lr_init
+    if parsed.lr_decay is not None:
+        main_config['train']['plan']['lr_decay_rate'] = parsed.lr_decay
+    if parsed.out_checkpoint is not None:
+        main_config['train']['checkpoint']['save_dir'] = parsed.out_checkpoint
+    if parsed.out_target is not None:
+        main_config['train']['validation']['target']['save_dir'] = parsed.out_target
+
+    return main_config
+
 
 # %%
 if __name__ == '__main__':
@@ -224,13 +258,7 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     dtype = torch.float
 
-    config_path = "./config/config.json"
-    if len(sys.argv) > 1:
-        config_path = sys.argv[1]
-
-
-    with open(config_path, "r") as config_file:
-        main_config = json.load(config_file)
+    main_config = create_config()
 
     try:
         model_config = main_config['model']
